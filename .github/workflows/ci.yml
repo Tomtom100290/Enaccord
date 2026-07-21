@@ -35,18 +35,35 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Facultatif mais recommandé si le wrapper pose encore problème
       - name: Droits d'exécution sur mvnw
         run: chmod +x mvnw
 
-      - name: Build, Tests et Analyse SonarCloud
+      # 📦 Étape 1 : Compilation seule de l'application
+      - name: Compilation de l'application
+        run: ./mvnw -B clean compile -DskipTests
+
+      # 🟢 Étape 2 : Exécution exclusive des tests unitaires
+      - name: Tests Unitaires (Surefire)
         env:
-          # Variables pour MySQL (communes aux tests)
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/enaccord_test
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: root
-          # Variables pour SonarCloud
+        run: ./mvnw -B surefire:test
+
+      # 🔵 Étape 3 : Exécution exclusive des tests d'intégration et JaCoCo
+      - name: Tests d'Intégration (Failsafe)
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/enaccord_test
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: root
+        run: ./mvnw -B failsafe:integration-test failsafe:verify
+
+      # 📊 Étape 4 : Analyse de la qualité du code
+      - name: Analyse SonarCloud
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/enaccord_test
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: root
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        # Une seule commande propre qui fait TOUT
-        run: ./mvnw -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=tomtom100290 -Dsonar.organization=tomtom100290
+        run: ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=tomtom100290 -Dsonar.organization=tomtom100290
