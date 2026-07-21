@@ -41,3 +41,9 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/enaccord_test
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: root
+
+      - name: Build and analise avec SonarCloud
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=tomtom100290 -Dsonar.organization=tomtom100290
