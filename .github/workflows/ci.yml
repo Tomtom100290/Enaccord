@@ -38,27 +38,27 @@ jobs:
       - name: Droits d'exécution sur mvnw
         run: chmod +x mvnw
 
-      # 📦 Étape 1 : Compilation seule de l'application
+      # Compilation seule de l'application
       - name: Compilation de l'application
         run: ./mvnw -B clean compile -DskipTests
 
-      # 🟢 Étape 2 : Exécution exclusive des tests unitaires
-      - name: Tests Unitaires (Surefire)
+      #  Exécution exclusive des tests unitaires
+      - name: Tests Unitaires EnAccord
         env:
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/enaccord_test
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: root
         run: ./mvnw -B surefire:test
 
-      # 🔵 Étape 3 : Exécution exclusive des tests d'intégration et JaCoCo
-      - name: Tests d'Intégration (Failsafe)
+      #  Exécution exclusive des tests d'intégration et JaCoCo
+      - name: Tests d'Intégration EnAccors
         env:
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/enaccord_test
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: root
         run: ./mvnw -B failsafe:integration-test failsafe:verify
 
-      # 📊 Étape 4 : Analyse de la qualité du code
+      #  Analyse de la qualité du code
       - name: Analyse SonarCloud
         env:
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/enaccord_test
