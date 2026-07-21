@@ -5,10 +5,10 @@ import com.enaccord.app.model.*;
 import com.enaccord.app.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest; // CORRIGÉ
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean; // COMPATIBLE SPRING BOOT 3.4+
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -47,7 +47,6 @@ class GroupeControllerTest {
         when(utilisateurRepository.findByEmail("test@enaccord.com"))
                 .thenReturn(Optional.of(new Utilisateur()));
 
-        // On crée un UserDetails standard propre pour le filtre
         var userDetails = org.springframework.security.core.userdetails.User
                 .withUsername("test@enaccord.com")
                 .password("password")
@@ -56,7 +55,7 @@ class GroupeControllerTest {
 
         mockMvc.perform(post("/groupes/1/chansons/enregistrer")
                         .with(csrf())
-                        .with(user(userDetails)) // 👈 Force l'authentification ici
+                        .with(user(userDetails))
                         .param("titre", "Wonderwall")
                         .param("artiste", "Oasis")
                         .param("contenuChordPro", "[Em]Today is [G]gonna be..."))
@@ -83,7 +82,7 @@ class GroupeControllerTest {
 
         mockMvc.perform(post("/groupes/1/chansons/5/modifier")
                         .with(csrf())
-                        .with(user(userDetails)) // 👈 Force l'authentification ici
+                        .with(user(userDetails))
                         .param("titre", "Nouveau titre")
                         .param("artiste", "Nouvel artiste")
                         .param("contenuChordPro", "[C]Nouveau contenu"))
@@ -99,7 +98,7 @@ class GroupeControllerTest {
     void detailGroupe_utilisateurNonMembre_devraitRedirigerAvecErreur() throws Exception {
         Groupe groupe = new Groupe();
         groupe.setId(1L);
-        groupe.setMembres(List.of()); // Liste vide = l'utilisateur n'est pas dedans
+        groupe.setMembres(List.of());
 
         when(groupeRepository.findById(1L)).thenReturn(Optional.of(groupe));
 
@@ -110,14 +109,13 @@ class GroupeControllerTest {
                 .build();
 
         mockMvc.perform(get("/groupes/1")
-                        .with(user(userDetails))) // 👈 Force l'authentification ici
+                        .with(user(userDetails)))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/groupes/mes-groupes?erreur=NonAutorise"));
     }
 
     @Test
     void accesGroupeSansAuthentification_devraitRedirigerVersConnexion() throws Exception {
-        // Ce test reste tel quel : sans .with(user(...)), il doit rediriger vers /connexion
         mockMvc.perform(get("/groupes/1"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/connexion"));
