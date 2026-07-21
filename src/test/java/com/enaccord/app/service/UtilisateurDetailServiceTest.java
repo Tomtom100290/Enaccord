@@ -1,8 +1,7 @@
-package com.enaccord.app;
+package com.enaccord.app.service;
 
 import com.enaccord.app.model.Utilisateur;
 import com.enaccord.app.repository.UtilisateurRepository;
-import com.enaccord.app.service.UtilisateurDetailService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
