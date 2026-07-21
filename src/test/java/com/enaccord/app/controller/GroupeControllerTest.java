@@ -116,8 +116,9 @@ class GroupeControllerTest {
 
     @Test
     void accesGroupeSansAuthentification_devraitRedirigerVersConnexion() throws Exception {
+        // Utilisation d'un pattern pour accepter le préfixe http://localhost généré par Spring Security
         mockMvc.perform(get("/groupes/1"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/connexion"));
+                .andExpect(redirectedUrlPattern("**/connexion"));
     }
 }
