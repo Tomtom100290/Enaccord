@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${groupe.nomDuGroupe}">Détails du Groupe</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; padding: 40px; color: #1e293b; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; gap: 30px; align-items: center; margin-bottom: 30px; }
+        .group-img { width: 120px; height: 120px; border-radius: 12px; object-fit: cover; background: #e2e8f0; }
+        .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h2 { color: #7c3aed; margin-top: 0; font-size: 1.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+        .btn { background: #7c3aed; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-secondary { background: #e2e8f0; color: #475569; }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
+        .item-row:last-child { border-bottom: none; }
+        .member-item { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 10px; background: #f8fafc; border-radius: 8px; }
+        .member-badge { background: #7c3aed; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a th:href="@{/groupes/mes-groupes}" class="btn btn-secondary" style="margin-bottom: 20px;">⬅ Retour à mes groupes</a>
+
+    <div class="header-box">
+        <img class="group-img" th:src="${groupe.image != null && !groupe.image.isEmpty() ? groupe.image : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150'}">
+        <div>
+            <h1 th:text="${groupe.nomDuGroupe}" style="margin: 0 0 10px 0; color: #7c3aed;">Nom du Groupe</h1>
+            <p th:text="${groupe.description}" style="margin: 0; color: #64748b;">Description...</p>
+        </div>
+    </div>
+
+    <div class="grid">
+        <!-- 👥 COLONNE MEMBRES DU GROUPE (Actualisée en temps réel) -->
+        <div class="card">
+            <h2>👥 Membres du groupe (<span th:text="${groupe.membres.size()}">0</span>)</h2>
+            <div th:each="m : ${groupe.membres}" class="member-item">
+                <div style="font-size: 1.5rem;">👤</div>
+                <div>
+                    <strong th:text="${m.utilisateur.pseudo}">Pseudo</strong>
+                    <span class="member-badge" th:if="${m.utilisateur.poste != null && !m.utilisateur.poste.isEmpty()}" th:text="${m.utilisateur.poste}">Guitare</span>
+                    <div th:text="${m.utilisateur.email}" style="color: #64748b; font-size: 0.8rem;">mail@test.com</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🎵 COLONNE CHANSONS COMMUNES -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">
+                <h2 style="border: none; margin: 0; padding: 0;">🎵 Répertoire Collaboratif</h2>
+                <a th:href="@{/groupes/{groupeId}/chansons/nouvelle(groupeId=${groupe.id})}" class="btn">➕ Ajouter une chanson</a>
+            </div>
+
+            <div th:if="${chansons.isEmpty()}" style="text-align: center; color: #64748b; padding: 40px 0;">
+                Aucune chanson commune dans ce groupe pour le moment.
+            </div>
+
+            <div th:each="chanson : ${chansons}" class="item-row">
+                <div>
+                    <strong th:text="${chanson.titre}" style="font-size: 1.1rem; color: #1e293b;">Titre</strong><br>
+                    <span th:text="'Artiste original : ' + ${chanson.artiste}" style="font-size: 0.85rem; color: #64748b;">Artiste</span><br>
+                    <span th:text="'Ajouté par : ' + ${chanson.utilisateur.pseudo}" style="font-size: 0.75rem; color: #94a3b8; font-style: italic;">Créateur</span>
+                </div>
+
+                <!-- Actions de modification / suppression -->
+                <div style="display: flex; gap: 10px;">
+                    <a th:href="@{/groupes/{groupeId}/chansons/{chansonId}(groupeId=${groupe.id}, chansonId=${chanson.id})}" class="btn btn-secondary" style="font-size: 0.85rem; padding: 6px 12px;">👁️ Voir</a>
+                    <a th:href="@{/groupes/{groupeId}/chansons/{chansonId}/modifier(groupeId=${groupe.id}, chansonId=${chanson.id})}" class="btn btn-secondary" style="font-size: 0.85rem; padding: 6px 12px;">✏ Modifier</a>
+
+                    <form th:action="@{/groupes/{groupeId}/chansons/{chansonId}/supprimer(groupeId=${groupe.id}, chansonId=${chanson.id})}" method="POST" onsubmit="return confirm('Supprimer cette chanson pour tout le groupe ?');" style="margin: 0;">
+                        <button type="submit" class="btn btn-danger" style="font-size: 0.85rem; padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer;">🗑</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

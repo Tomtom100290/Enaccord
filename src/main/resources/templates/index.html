@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon Répertoire - Le Juste Accord</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; padding: 40px; color: #1e293b; margin: 0; }
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        /* Barre de navigation */
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .navbar h1 { margin: 0; color: #7c3aed; font-size: 1.8rem; }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { text-decoration: none; color: #475569; font-weight: 600; transition: color 0.2s; }
+        .nav-links a:hover { color: #7c3aed; }
+
+        /* Boutons */
+        .btn { background: #7c3aed; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-secondary { background: #e2e8f0; color: #475569; }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .btn-danger { background: #ef4444; }
+
+        /* Grille de contenu */
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+
+        /* Liste des chansons */
+        .song-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
+        .song-item:last-child { border-bottom: none; }
+        .song-info a { font-size: 1.1rem; font-weight: bold; color: #1e293b; text-decoration: none; }
+        .song-info a:hover { color: #7c3aed; }
+        .song-artist { color: #64748b; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="navbar">
+        <h1>🎵 Le Juste Accord</h1>
+        <div class="nav-links">
+            <a th:href="@{/}">🏠 Mon Répertoire</a>
+            <a th:href="@{/groupes/mes-groupes}">🎸 Mes Groupes</a>
+
+            <span style="color: #cbd5e1;">|</span>
+
+            <span>Bonjour, <strong th:text="${utilisateurConnecte.pseudo}">Pseudo</strong> (<span th:text="${utilisateurConnecte.poste}">Instrument</span>)</span>
+
+            <form th:action="@{/deconnexion}" method="POST" style="margin: 0;">
+                <button type="submit" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.9rem;">Déconnexion</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0; border: none; padding: 0;">Mes Compositions / Chansons</h2>
+                <a th:href="@{/chansons/nouvelle}" class="btn">➕ Nouvelle Chanson</a>
+            </div>
+
+            <div th:if="${chansons.isEmpty()}" style="text-align: center; padding: 30px 0; color: #64748b;">
+                <p>Vous n'avez pas encore ajouté de chanson à votre répertoire personnel.</p>
+            </div>
+
+            <div th:each="chanson : ${chansons}" class="song-item">
+                <div class="song-info">
+                    <a th:href="@{/chansons/{id}(id=${chanson.id})}" th:text="${chanson.titre}">Titre de la chanson</a>
+                    <div class="song-artist" th:text="'Artiste original : ' + ${chanson.artiste}">Artiste original</div>
+                </div>
+                <div>
+                    <a th:href="@{/chansons/{id}/modifier(id=${chanson.id})}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.9rem;">Modifier</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="height: fit-content;">
+            <h2>Mon Profil</h2>
+            <p><strong>Rôle :</strong> Membre de la communauté</p>
+            <p><strong>Instrument :</strong> <span th:text="${utilisateurConnecte.poste}">Aucun</span></p>
+            <p><strong>Email :</strong> <span th:text="${utilisateurConnecte.email}">email@test.com</span></p>
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+            <a th:href="@{/groupes/nouveau}" class="btn btn-secondary" style="width: 100%; text-align: center; box-sizing: border-box;">👥 Créer un nouveau groupe</a>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title layout:title-pattern="$CONTENT_TITLE - Le Juste Accord">Le Juste Accord</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin:0; background:#f8fafc; color:#1e293b; }
+        .navbar { background:#7c3aed; padding:15px 30px; display:flex; gap:25px; align-items:center; }
+        .navbar a { color:white; text-decoration:none; font-weight:bold; }
+        .navbar a:last-child { margin-left:auto; }
+        .page-content { padding: 40px; }
+    </style>
+    <th:block layout:fragment="css"></th:block>
+</head>
+<body>
+<nav class="navbar">
+    <a th:href="@{/}">🎸 Le Juste Accord</a>
+    <a th:href="@{/chansons}">Mes chansons</a>
+    <a th:href="@{/groupes/mes-groupes}">Mes groupes</a>
+    <a th:href="@{/logout}">Déconnexion</a>
+</nav>
+
+<div class="page-content" layout:fragment="content">
+    <!-- contenu de chaque page injecté ici -->
+</div>
+
+<th:block layout:fragment="js"></th:block>
+</body>
+</html>

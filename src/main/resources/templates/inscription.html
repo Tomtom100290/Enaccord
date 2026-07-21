@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>S'inscrire - Le Juste Accord</title>
+    <style>
+        body { font-family: sans-serif; background: #f8fafc; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 350px; }
+        h2 { color: #7c3aed; margin-top: 0; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        .btn { width: 100%; background: #7c3aed; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .error { color: #ef4444; margin-bottom: 15px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Créer un compte</h2>
+    <div th:if="${error}" class="error" th:text="${error}"></div>
+
+    <form th:action="@{/inscription}" th:object="${utilisateur}" method="POST">
+        <div class="form-group">
+            <label>Pseudo :</label>
+            <input type="text" th:field="*{pseudo}" required>
+        </div>
+        <div class="form-group">
+            <label>Email :</label>
+            <input type="email" th:field="*{email}" required>
+        </div>
+        <div class="form-group">
+            <label>Mot de passe :</label>
+            <input type="password" th:field="*{motDePasse}" required>
+        </div>
+        <div class="form-group">
+            <label>Votre instrument principal (Poste) :</label>
+            <select th:field="*{poste}" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: white;">
+                <option value="">-- Choisissez votre instrument --</option>
+                <option value="Chanteur">Chanteur / Chanteuse</option>
+                <option value="Guitariste">Guitariste</option>
+                <option value="Bassiste">Bassiste</option>
+                <option value="Pianiste">Pianiste / Claviériste</option>
+                <option value="Batterie">Batteriste</option>
+                <option value="Percutionniste">Percutionniste</option>
+                <option value="Multi-instrumentiste">Multi-instrumentiste</option>
+                <option value="Autre">Autre</option>
+            </select>
+        </div>
+        <button type="submit" class="btn">S'inscrire</button>
+    </form>
+    <p style="text-align: center; margin-top: 15px; font-size: 0.9rem;">
+        Déjà membre ? <a th:href="@{/connexion}" style="color: #7c3aed;">Connectez-vous</a>
+    </p>
+</div>
+</body>
+</html>
