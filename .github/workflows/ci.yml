@@ -35,15 +35,18 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Build et exécution des tests
-        run: mvn -B clean verify
+      # Facultatif mais recommandé si le wrapper pose encore problème
+      - name: Droits d'exécution sur mvnw
+        run: chmod +x mvnw
+
+      - name: Build, Tests et Analyse SonarCloud
         env:
+          # Variables pour MySQL (communes aux tests)
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/enaccord_test
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: root
-
-      - name: Build and analise avec SonarCloud
-        env:
+          # Variables pour SonarCloud
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=tomtom100290 -Dsonar.organization=tomtom100290
+        # Une seule commande propre qui fait TOUT
+        run: ./mvnw -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=tomtom100290 -Dsonar.organization=tomtom100290
