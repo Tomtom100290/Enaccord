@@ -154,6 +154,24 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.15</version>
                 <executions>
+                    <!-- 1. Initialise l'agent JaCoCo avant les tests (INDISPENSABLE) -->
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- 2. Génère le rapport XML pour SonarCloud après les tests (INDISPENSABLE) -->
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- 3. Votre vérification de seuil actuelle -->
                     <execution>
                         <id>check</id>
                         <goals>
@@ -167,7 +185,6 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <!-- [MODIFICATION] Mettre 0.25 pour que le build passe avec vos 28% actuels -->
                                             <minimum>0.25</minimum>
                                         </limit>
                                     </limits>
