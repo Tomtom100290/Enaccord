@@ -1,28 +1,293 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" lang="fr">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title layout:title-pattern="$CONTENT_TITLE - Le Juste Accord">Le Juste Accord</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin:0; background:#f8fafc; color:#1e293b; }
-        .navbar { background:#7c3aed; padding:15px 30px; display:flex; gap:25px; align-items:center; }
-        .navbar a { color:white; text-decoration:none; font-weight:bold; }
-        .navbar a:last-child { margin-left:auto; }
+        :root {
+            --ink: #201B14;
+            --ink-soft: #2B241A;
+            --mustard: #E3B23C;
+            --mustard-deep: #B98B25;
+            --cream: #F5EFE3;
+            --slate: #B8AF9E;
+            --nav-height: 68px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            margin: 0;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        .navbar {
+            background: var(--ink);
+            height: var(--nav-height);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+        }
+
+        .brand {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-style: italic;
+            font-size: 1.25rem;
+            color: var(--cream);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+        .brand i { color: var(--mustard); font-style: normal; font-size: 1.05rem; }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 24px;
+        }
+        .nav-link {
+            position: relative;
+            color: var(--slate);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.92rem;
+            padding: 10px 14px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.15s ease;
+        }
+        .nav-link i { font-size: 0.85rem; width: 16px; text-align: center; }
+        .nav-link::after {
+            content: "";
+            position: absolute;
+            left: 14px;
+            right: 14px;
+            bottom: 6px;
+            height: 2px;
+            background: var(--mustard);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.2s ease;
+        }
+        .nav-link:hover { color: var(--cream); }
+        .nav-link:hover::after,
+        .nav-link.active::after { transform: scaleX(1); }
+        .nav-link.active { color: var(--cream); }
+
+        .navbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--cream);
+            font-size: 0.86rem;
+            background: rgba(227, 178, 60, 0.12);
+            border: 1px solid rgba(227, 178, 60, 0.3);
+            padding: 7px 14px;
+            border-radius: 20px;
+        }
+        .user-chip i { color: var(--mustard); font-size: 0.8rem; }
+        .user-chip .poste { color: var(--slate); }
+
+        .btn-auth {
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.86rem;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid transparent;
+            transition: all 0.15s ease;
+        }
+        .btn-auth.primary {
+            background: var(--mustard);
+            color: var(--ink);
+        }
+        .btn-auth.primary:hover { background: #f0c258; }
+        .btn-auth.ghost {
+            background: transparent;
+            color: var(--cream);
+            border-color: rgba(245, 239, 227, 0.25);
+        }
+        .btn-auth.ghost:hover { border-color: var(--mustard); color: var(--mustard); }
+        .btn-auth.logout {
+            background: rgba(239, 68, 68, 0.12);
+            color: #f4a3a3;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .btn-auth.logout:hover { background: rgba(239, 68, 68, 0.22); color: #fecaca; }
+
+        form.logout-form { margin: 0; }
+
+        .burger {
+            display: none;
+            margin-left: auto;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+        .burger span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: var(--cream);
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+        .navbar.is-open .burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .navbar.is-open .burger span:nth-child(2) { opacity: 0; }
+        .navbar.is-open .burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
         .page-content { padding: 40px; }
+
+        @media (max-width: 860px) {
+            .nav-links, .navbar-right { display: none; }
+            .burger { display: flex; }
+
+            .navbar.is-open .nav-links,
+            .navbar.is-open .navbar-right {
+                display: flex;
+            }
+            .navbar.is-open {
+                flex-wrap: wrap;
+                height: auto;
+                padding-bottom: 16px;
+                align-items: flex-start;
+            }
+            .navbar.is-open .nav-links {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+                margin: 12px 0 0 0;
+                gap: 2px;
+                order: 3;
+            }
+            .navbar.is-open .nav-link { padding: 12px 10px; }
+            .navbar.is-open .nav-link::after { display: none; }
+            .navbar.is-open .nav-link.active { background: rgba(227,178,60,0.1); border-radius: 6px; }
+
+            .navbar.is-open .navbar-right {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+                order: 4;
+                gap: 8px;
+                margin-top: 8px;
+                padding-top: 12px;
+                border-top: 1px solid rgba(245,239,227,0.1);
+            }
+            .navbar.is-open .user-chip,
+            .navbar.is-open .btn-auth,
+            .navbar.is-open form.logout-form { width: 100%; }
+            .navbar.is-open .btn-auth { justify-content: center; }
+
+            .page-content { padding: 24px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .burger span, .nav-link::after { transition: none; }
+        }
+
+        a:focus-visible, button:focus-visible {
+            outline: 2px solid var(--mustard);
+            outline-offset: 2px;
+        }
     </style>
     <th:block layout:fragment="css"></th:block>
 </head>
 <body>
-<nav class="navbar">
-    <a th:href="@{/}">🎸 Le Juste Accord</a>
-    <a th:href="@{/chansons}">Mes chansons</a>
-    <a th:href="@{/groupes/mes-groupes}">Mes groupes</a>
-    <a th:href="@{/logout}">Déconnexion</a>
+
+<nav class="navbar" id="mainNavbar">
+    <a class="brand" th:href="@{/}">
+        <img th:src="@{/images/logoEnAccord.png}" alt="Logo En Accord" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;">
+        Le Juste Accord
+    </a>
+
+    <button class="burger" id="burgerBtn" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="mainNavbar">
+        <span></span><span></span><span></span>
+    </button>
+
+    <div class="nav-links">
+        <a class="nav-link" th:href="@{/}">
+            <i class="fa-solid fa-house"></i> Accueil
+        </a>
+        <a class="nav-link" th:href="@{/groupes/mes-groupes}" sec:authorize="isAuthenticated()">
+            <i class="fa-solid fa-people-group"></i> Mes groupes
+        </a>
+    </div>
+
+    <div class="navbar-right">
+        <span class="user-chip" sec:authorize="isAuthenticated()">
+            <i class="fa-solid fa-user"></i>
+            <strong th:text="${utilisateurConnecte?.pseudo}">Pseudo</strong>
+            <span class="poste" th:if="${utilisateurConnecte?.poste}" th:text="'· ' + ${utilisateurConnecte.poste}">· Instrument</span>
+        </span>
+        <form class="logout-form" th:action="@{/deconnexion}" method="POST" sec:authorize="isAuthenticated()">
+            <button type="submit" class="btn-auth logout">
+                <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
+            </button>
+        </form>
+
+        <a class="btn-auth ghost" th:href="@{/connexion}" sec:authorize="isAnonymous()">
+            <i class="fa-solid fa-right-to-bracket"></i> Connexion
+        </a>
+        <a class="btn-auth primary" th:href="@{/inscription}" sec:authorize="isAnonymous()">
+            <i class="fa-solid fa-user-plus"></i> Créer un compte
+        </a>
+    </div>
 </nav>
 
 <div class="page-content" layout:fragment="content">
     <!-- contenu de chaque page injecté ici -->
 </div>
+
+<script>
+    const nav = document.getElementById('mainNavbar');
+    const burger = document.getElementById('burgerBtn');
+    burger.addEventListener('click', () => {
+        const isOpen = nav.classList.toggle('is-open');
+        burger.setAttribute('aria-expanded', isOpen);
+        burger.setAttribute('aria-label', isOpen ? 'Fermer le menu' : 'Ouvrir le menu');
+    });
+</script>
 
 <th:block layout:fragment="js"></th:block>
 </body>
