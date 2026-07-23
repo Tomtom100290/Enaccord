@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(ChansonController.class)
 @Import(SecurityConfig.class)
-public class ChansonControllerTest {
+class ChansonControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
