@@ -33,7 +33,7 @@ public class GroupeController {
     private ChansonRepository chansonRepository;
 
     @Autowired
-    private AccordRepository accordRepository; // REQUIS pour charger les accords dans l'éditeur interactif
+    private AccordRepository accordRepository;
 
     // ==========================================
     // 👥 GESTION DES GROUPES & MEMBRES
@@ -61,7 +61,6 @@ public class GroupeController {
         groupe.setImage(image);
         groupeRepository.save(groupe);
 
-        // Ajout immédiat du créateur comme membre actif
         MembreGroupe membreCreateur = new MembreGroupe();
         membreCreateur.setGroupe(groupe);
         membreCreateur.setUtilisateur(createur);
@@ -107,7 +106,6 @@ public class GroupeController {
         invitation.setStatut("ACCEPTEE");
         invitationGroupeRepository.save(invitation);
 
-        // Dès que c'est accepté, l'utilisateur est lié au groupe
         MembreGroupe nouveauMembre = new MembreGroupe();
         nouveauMembre.setGroupe(invitation.getGroupe());
         nouveauMembre.setUtilisateur(invitation.getInvite());
@@ -128,13 +126,11 @@ public class GroupeController {
         return "redirect:/groupes/mes-groupes";
     }
 
-    // Afficher les détails du groupe (Membres actifs + Chansons communes)
     @GetMapping("/{id}")
     public String detailGroupe(@PathVariable("id") Long id, Model model, @AuthenticationPrincipal UserDetails currentUser) {
         Groupe groupe = groupeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Groupe introuvable"));
 
-        // Sécurité : Vérifier si l'utilisateur connecté est bien membre du groupe
         boolean estMembre = groupe.getMembres().stream()
                 .anyMatch(m -> m.getUtilisateur().getEmail().equals(currentUser.getUsername()));
 
@@ -147,14 +143,13 @@ public class GroupeController {
         model.addAttribute("groupe", groupe);
         model.addAttribute("chansons", chansonsDuGroupe);
 
-        return "detail_groupe";
+        return "detail_groupe"; // <--- Doit correspondre à detail_groupe.html
     }
 
     // ==========================================
     // 🎵 CRUD DES CHANSONS DU GROUPE
     // ==========================================
 
-    // C - Formulaire d'ajout d'une chanson au groupe
     @GetMapping("/{groupeId}/chansons/nouvelle")
     public String formulaireAjoutChanson(
             @PathVariable("groupeId") Long groupeId,
@@ -164,7 +159,6 @@ public class GroupeController {
         Groupe groupe = groupeRepository.findById(groupeId)
                 .orElseThrow(() -> new RuntimeException("Groupe introuvable"));
 
-        // Sécurité : Vérification d'accès
         boolean estMembre = groupe.getMembres().stream()
                 .anyMatch(m -> m.getUtilisateur().getEmail().equals(currentUser.getUsername()));
         if (!estMembre) {
@@ -176,12 +170,37 @@ public class GroupeController {
 
         model.addAttribute("chanson", chanson);
         model.addAttribute("groupe", groupe);
-        model.addAttribute("accordsDisponibles", accordRepository.findAll()); // Envoi des accords pour l'éditeur
+        model.addAttribute("accordsDisponibles", accordRepository.findAll());
 
-        return "formulaire_chanson_groupe"; // Assure-toi que ton fichier s'appelle bien ainsi (ou nouvelle_chanson_groupe)
+        // CORRECTION : Le fichier dans /templates s'appelle formulaire_chanson_groupe.html
+        return "formulaire_chanson_groupe";
     }
 
-    // C - Traitement de la création
+    @PostMapping("/{id}/inviter")
+    public String inviterMembresSupplementaires(
+            @PathVariable("id") Long id,
+            @RequestParam("emailsInvites") String emailsInvites) {
+
+        Groupe groupe = groupeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Groupe introuvable"));
+
+        if (emailsInvites != null && !emailsInvites.isEmpty()) {
+            String[] emails = emailsInvites.split(",");
+            for (String email : emails) {
+                Optional<Utilisateur> inviteOpt = utilisateurRepository.findByEmail(email.trim());
+                if (inviteOpt.isPresent()) {
+                    // Optionnel : vérifier si déjà membre ou déjà invité avant d'enregistrer
+                    InvitationGroupe invitation = new InvitationGroupe();
+                    invitation.setGroupe(groupe);
+                    invitation.setInvite(inviteOpt.get());
+                    invitation.setStatut("EN_ATTENTE");
+                    invitationGroupeRepository.save(invitation);
+                }
+            }
+        }
+
+        return "redirect:/groupes/" + id;
+    }
     @PostMapping("/{groupeId}/chansons/enregistrer")
     public String creerChansonGroupe(
             @PathVariable("groupeId") Long groupeId,
@@ -195,13 +214,13 @@ public class GroupeController {
                 .orElseThrow(() -> new RuntimeException("Auteur non trouvé"));
 
         chanson.setGroupe(groupe);
-        chanson.setUtilisateur(auteur); // Qui a ajouté la chanson
+        chanson.setUtilisateur(auteur);
         chansonRepository.save(chanson);
 
         return "redirect:/groupes/" + groupeId;
     }
 
-    // R - Affichage détail (lecture seule) d'une chanson du groupe
+    // R - Affichage du morceau (Lecture + Transposition)
     @GetMapping("/{groupeId}/chansons/{chansonId}")
     public String detailChansonGroupe(
             @PathVariable("groupeId") Long groupeId,
@@ -212,7 +231,6 @@ public class GroupeController {
         Groupe groupe = groupeRepository.findById(groupeId)
                 .orElseThrow(() -> new RuntimeException("Groupe introuvable"));
 
-        // Sécurité : Vérification d'accès
         boolean estMembre = groupe.getMembres().stream()
                 .anyMatch(m -> m.getUtilisateur().getEmail().equals(currentUser.getUsername()));
         if (!estMembre) {
@@ -224,11 +242,12 @@ public class GroupeController {
 
         model.addAttribute("chanson", chanson);
         model.addAttribute("groupe", groupe);
-        model.addAttribute("accordsDisponibles", accordRepository.findAll()); // pour le script de transposition
+        model.addAttribute("accordsDisponibles", accordRepository.findAll());
 
+        // CORRECTION : Le fichier dans /templates s'appelle voir_chanson_groupe.html
         return "voir_chanson_groupe";
     }
-    // U - Formulaire de modification d'une chanson du groupe
+
     @GetMapping("/{groupeId}/chansons/{chansonId}/modifier")
     public String formulaireModificationChanson(
             @PathVariable("groupeId") Long groupeId,
@@ -239,7 +258,6 @@ public class GroupeController {
         Groupe groupe = groupeRepository.findById(groupeId)
                 .orElseThrow(() -> new RuntimeException("Groupe introuvable"));
 
-        // Sécurité : Vérification d'accès
         boolean estMembre = groupe.getMembres().stream()
                 .anyMatch(m -> m.getUtilisateur().getEmail().equals(currentUser.getUsername()));
         if (!estMembre) {
@@ -251,12 +269,12 @@ public class GroupeController {
 
         model.addAttribute("chanson", chanson);
         model.addAttribute("groupe", groupe);
-        model.addAttribute("accordsDisponibles", accordRepository.findAll()); // Envoi des accords pour l'édition
+        model.addAttribute("accordsDisponibles", accordRepository.findAll());
 
+        // CORRECTION : Retour vers le template de formulaire pour le groupe
         return "formulaire_chanson_groupe";
     }
 
-    // U - Traitement de la modification
     @PostMapping("/{groupeId}/chansons/{chansonId}/modifier")
     public String modifierChansonGroupe(
             @PathVariable("groupeId") Long groupeId,
@@ -266,7 +284,6 @@ public class GroupeController {
         Chanson chansonExistante = chansonRepository.findById(chansonId)
                 .orElseThrow(() -> new RuntimeException("Chanson introuvable"));
 
-        // Mise à jour des informations + du contenu ChordPro contenant tes accords modifiés !
         chansonExistante.setTitre(chansonModifiee.getTitre());
         chansonExistante.setArtiste(chansonModifiee.getArtiste());
         chansonExistante.setContenuChordPro(chansonModifiee.getContenuChordPro());
@@ -276,7 +293,6 @@ public class GroupeController {
         return "redirect:/groupes/" + groupeId;
     }
 
-    // D - Suppression d'une chanson du groupe
     @PostMapping("/{groupeId}/chansons/{chansonId}/supprimer")
     public String supprimerChansonGroupe(
             @PathVariable("groupeId") Long groupeId,

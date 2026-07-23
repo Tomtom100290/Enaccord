@@ -1,84 +1,218 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}" lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${groupe.nomDuGroupe}">Détails du Groupe</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; padding: 40px; color: #1e293b; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        .header-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; gap: 30px; align-items: center; margin-bottom: 30px; }
-        .group-img { width: 120px; height: 120px; border-radius: 12px; object-fit: cover; background: #e2e8f0; }
-        .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h2 { color: #7c3aed; margin-top: 0; font-size: 1.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
-        .btn { background: #7c3aed; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; }
-        .btn-secondary { background: #e2e8f0; color: #475569; }
-        .btn-secondary:hover { background: #cbd5e1; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-danger:hover { background: #dc2626; }
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
-        .item-row:last-child { border-bottom: none; }
-        .member-item { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 10px; background: #f8fafc; border-radius: 8px; }
-        .member-badge { background: #7c3aed; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
-    </style>
+    <title th:text="${groupe.nomDuGroupe}"></title>
+
+    <!-- Styles spécifiques au tableau de bord du groupe -->
+    <th:block layout:fragment="css">
+        <style>
+            .header-box {
+                background: white;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+                display: flex;
+                gap: 30px;
+                align-items: center;
+                margin-bottom: 30px;
+            }
+            .group-img {
+                width: 120px;
+                height: 120px;
+                border-radius: 12px;
+                object-fit: cover;
+                background: var(--cream);
+                border: 1px solid rgba(43, 36, 26, 0.08);
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: 1fr 2fr;
+                gap: 30px;
+            }
+            @media (max-width: 768px) {
+                .grid { grid-template-columns: 1fr; }
+                .header-box { flex-direction: column; text-align: center; }
+            }
+            .card {
+                background: white;
+                padding: 25px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            }
+            .card h2 {
+                color: var(--ink);
+                margin-top: 0;
+                font-size: 1.4rem;
+                font-family: 'Fraunces', serif;
+                border-bottom: 2px solid var(--cream);
+                padding-bottom: 12px;
+                margin-bottom: 20px;
+            }
+            .item-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 16px 0;
+                border-bottom: 1px solid rgba(0,0,0,0.05);
+            }
+            .item-row:last-child { border-bottom: none; }
+
+            .member-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 12px;
+                padding: 12px;
+                background: #faf9f6;
+                border-radius: 8px;
+                border: 1px solid rgba(43, 36, 26, 0.04);
+            }
+            .member-badge {
+                background: var(--mustard);
+                color: var(--ink);
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 0.75rem;
+                font-weight: bold;
+                margin-left: 6px;
+            }
+            .group-actions {
+                display: flex;
+                gap: 8px;
+            }
+
+            /* Zone d'invitation rapide */
+            .invite-box {
+                background: #fdfdfd;
+                border: 1px dashed rgba(43, 36, 26, 0.15);
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+            }
+            .invite-box label {
+                display: block;
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: var(--ink-soft);
+                margin-bottom: 6px;
+            }
+            .invite-input-group {
+                display: flex;
+                gap: 6px;
+            }
+            .invite-input-group input[type="text"] {
+                flex: 1;
+                padding: 8px 12px;
+                border: 1px solid var(--slate);
+                border-radius: 6px;
+                font-size: 0.85rem;
+                box-sizing: border-box;
+            }
+            .invite-input-group input[type="text"]:focus {
+                outline: none;
+                border-color: var(--mustard-deep);
+            }
+            .invite-input-group button {
+                padding: 8px 14px;
+                font-size: 0.85rem;
+                cursor: pointer;
+                border: none;
+                border-radius: 6px;
+            }
+        </style>
+    </th:block>
 </head>
 <body>
 
-<div class="container">
-    <a th:href="@{/groupes/mes-groupes}" class="btn btn-secondary" style="margin-bottom: 20px;">⬅ Retour à mes groupes</a>
+<div layout:fragment="content">
 
+    <div style="margin-bottom: 20px;">
+        <a th:href="@{/groupes/mes-groupes}" class="btn-auth ghost" style="text-decoration: none; color: var(--ink); border-color: var(--slate);">
+            <i class="fa-solid fa-arrow-left"></i> Retour à mes groupes
+        </a>
+    </div>
+
+    <!-- En-tête du groupe -->
     <div class="header-box">
-        <img class="group-img" th:src="${groupe.image != null && !groupe.image.isEmpty() ? groupe.image : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150'}">
+        <img class="group-img" th:src="${groupe.image != null && !groupe.image.isEmpty() ? groupe.image : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150'}" alt="Couverture du groupe">
         <div>
-            <h1 th:text="${groupe.nomDuGroupe}" style="margin: 0 0 10px 0; color: #7c3aed;">Nom du Groupe</h1>
-            <p th:text="${groupe.description}" style="margin: 0; color: #64748b;">Description...</p>
+            <h1 th:text="${groupe.nomDuGroupe}" style="margin: 0 0 8px 0; color: var(--ink); font-family: 'Fraunces', serif; font-size: 2.2rem;">Nom du Groupe</h1>
+            <p th:text="${groupe.description}" style="margin: 0; color: var(--slate); line-height: 1.5;">Description...</p>
         </div>
     </div>
 
     <div class="grid">
-        <!-- 👥 COLONNE MEMBRES DU GROUPE (Actualisée en temps réel) -->
+        <!-- 👥 Colonne Membres -->
         <div class="card">
-            <h2>👥 Membres du groupe (<span th:text="${groupe.membres.size()}">0</span>)</h2>
+            <h2><i class="fa-solid fa-users"></i> Membres (<span th:text="${groupe.membres.size()}">0</span>)</h2>
+
+            <!-- Formulaire d'invitation rapide de nouveaux membres -->
+            <div class="invite-box">
+                <form th:action="@{/groupes/{id}/inviter(id=${groupe.id})}" method="POST">
+                    <label for="emailsInvites">Inviter des musiciens (e-mails séparés par des virgules) :</label>
+                    <div class="invite-input-group">
+                        <input type="text" id="emailsInvites" name="emailsInvites" placeholder="guitariste@test.com, batteur@test.com" required autocomplete="off">
+                        <button type="submit" class="btn-auth primary">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Liste des membres du groupe -->
             <div th:each="m : ${groupe.membres}" class="member-item">
-                <div style="font-size: 1.5rem;">👤</div>
+                <div style="color: var(--slate); font-size: 1.2rem;"><i class="fa-solid fa-user"></i></div>
                 <div>
-                    <strong th:text="${m.utilisateur.pseudo}">Pseudo</strong>
+                    <span style="font-weight: 600; color: var(--ink);" th:text="${m.utilisateur.pseudo}">Pseudo</span>
                     <span class="member-badge" th:if="${m.utilisateur.poste != null && !m.utilisateur.poste.isEmpty()}" th:text="${m.utilisateur.poste}">Guitare</span>
-                    <div th:text="${m.utilisateur.email}" style="color: #64748b; font-size: 0.8rem;">mail@test.com</div>
+                    <div th:text="${m.utilisateur.email}" style="color: var(--slate); font-size: 0.8rem; margin-top: 2px;">mail@test.com</div>
                 </div>
             </div>
         </div>
 
-        <!-- 🎵 COLONNE CHANSONS COMMUNES -->
+        <!-- 🎵 Colonne Répertoire -->
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">
-                <h2 style="border: none; margin: 0; padding: 0;">🎵 Répertoire Collaboratif</h2>
-                <a th:href="@{/groupes/{groupeId}/chansons/nouvelle(groupeId=${groupe.id})}" class="btn">➕ Ajouter une chanson</a>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--cream); padding-bottom: 12px;">
+                <h2 style="border: none; margin: 0; padding: 0;"><i class="fa-solid fa-music"></i> Répertoire Collaboratif</h2>
+                <a th:href="@{/groupes/{groupeId}/chansons/nouvelle(groupeId=${groupe.id})}" class="btn-auth primary" style="text-decoration: none; padding: 8px 14px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-plus"></i> Ajouter une chanson
+                </a>
             </div>
 
-            <div th:if="${chansons.isEmpty()}" style="text-align: center; color: #64748b; padding: 40px 0;">
+            <div th:if="${chansons.isEmpty()}" style="text-align: center; color: var(--slate); padding: 40px 0; font-style: italic;">
                 Aucune chanson commune dans ce groupe pour le moment.
             </div>
 
             <div th:each="chanson : ${chansons}" class="item-row">
                 <div>
-                    <strong th:text="${chanson.titre}" style="font-size: 1.1rem; color: #1e293b;">Titre</strong><br>
-                    <span th:text="'Artiste original : ' + ${chanson.artiste}" style="font-size: 0.85rem; color: #64748b;">Artiste</span><br>
-                    <span th:text="'Ajouté par : ' + ${chanson.utilisateur.pseudo}" style="font-size: 0.75rem; color: #94a3b8; font-style: italic;">Créateur</span>
+                    <strong th:text="${chanson.titre}" style="font-size: 1.1rem; color: var(--ink);">Titre</strong><br>
+                    <span th:text="'Artiste original : ' + ${chanson.artiste}" style="font-size: 0.85rem; color: var(--slate);">Artiste</span><br>
+                    <span th:text="'Ajouté par : ' + ${chanson.utilisateur.pseudo}" style="font-size: 0.75rem; color: var(--slate); opacity: 0.8; font-style: italic;">Créateur</span>
                 </div>
 
-                <!-- Actions de modification / suppression -->
-                <div style="display: flex; gap: 10px;">
-                    <a th:href="@{/groupes/{groupeId}/chansons/{chansonId}(groupeId=${groupe.id}, chansonId=${chanson.id})}" class="btn btn-secondary" style="font-size: 0.85rem; padding: 6px 12px;">👁️ Voir</a>
-                    <a th:href="@{/groupes/{groupeId}/chansons/{chansonId}/modifier(groupeId=${groupe.id}, chansonId=${chanson.id})}" class="btn btn-secondary" style="font-size: 0.85rem; padding: 6px 12px;">✏ Modifier</a>
+                <!-- Actions disponibles sur le morceau -->
+                <div class="group-actions">
+                    <a th:href="@{/groupes/{groupeId}/chansons/{chansonId}(groupeId=${groupe.id}, chansonId=${chanson.id})}" class="btn-auth ghost" style="font-size: 0.85rem; padding: 6px 12px; text-decoration: none; border-color: var(--slate); color: var(--ink);">
+                        <i class="fa-solid fa-eye"></i> Voir
+                    </a>
+                    <a th:href="@{/groupes/{groupeId}/chansons/{chansonId}/modifier(groupeId=${groupe.id}, chansonId=${chanson.id})}" class="btn-auth ghost" style="font-size: 0.85rem; padding: 6px 12px; text-decoration: none; border-color: var(--slate); color: var(--ink);">
+                        <i class="fa-solid fa-pen"></i> Modifier
+                    </a>
 
                     <form th:action="@{/groupes/{groupeId}/chansons/{chansonId}/supprimer(groupeId=${groupe.id}, chansonId=${chanson.id})}" method="POST" onsubmit="return confirm('Supprimer cette chanson pour tout le groupe ?');" style="margin: 0;">
-                        <button type="submit" class="btn btn-danger" style="font-size: 0.85rem; padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer;">🗑</button>
+                        <button type="submit" class="btn-auth" style="font-size: 0.85rem; padding: 6px 12px; background: #ef4444; color: white; border: none; cursor: pointer; border-radius: 6px;">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
 </div>
 
 </body>

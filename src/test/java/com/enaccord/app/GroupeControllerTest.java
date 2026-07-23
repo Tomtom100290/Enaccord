@@ -1,6 +1,7 @@
-package com.enaccord.app.controller;
+package com.enaccord.app;
 
 import com.enaccord.app.config.SecurityConfig;
+import com.enaccord.app.controller.GroupeController;
 import com.enaccord.app.model.*;
 import com.enaccord.app.repository.*;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(GroupeController.class)
 @Import(SecurityConfig.class)
-class GroupeControllerTest {
+public class GroupeControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

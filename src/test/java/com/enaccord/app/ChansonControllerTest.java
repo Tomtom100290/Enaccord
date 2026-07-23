@@ -1,6 +1,7 @@
-package com.enaccord.app.controller;
+package com.enaccord.app;
 
 import com.enaccord.app.config.SecurityConfig;
+import com.enaccord.app.controller.ChansonController;
 import com.enaccord.app.model.Chanson;
 import com.enaccord.app.model.Groupe;
 import com.enaccord.app.model.Utilisateur;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(ChansonController.class)
 @Import(SecurityConfig.class)
-class ChansonControllerTest {
+public class ChansonControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -48,9 +49,8 @@ class ChansonControllerTest {
                 .build();
     }
 
-    // ==========================================
+
     // 🎵 TESTS : FORMULAIRE DE CRÉATION
-    // ==========================================
 
     @Test
     void nouvelleChansonForm_sansGroupe_devraitRetournerLaVueAvecChansonVide() throws Exception {

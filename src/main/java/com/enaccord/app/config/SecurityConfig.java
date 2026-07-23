@@ -17,7 +17,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         // Autoriser l'accès public à l'accueil, l'inscription, la connexion et aux fichiers statiques (CSS/JS)
-                        .requestMatchers("/", "/inscription", "/connexion", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/", "/inscription", "/connexion", "/css/**", "/js/**", "/images/**").permitAll()
                         // Toutes les autres pages (ex: /chansons/nouvelle, /chansons/modifier) demandent une connexion
                         .requestMatchers("/groupes/**").authenticated()
                         .anyRequest().authenticated()

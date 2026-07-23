@@ -1,7 +1,8 @@
-package com.enaccord.app.service;
+package com.enaccord.app;
 
 import com.enaccord.app.model.Utilisateur;
 import com.enaccord.app.repository.UtilisateurRepository;
+import com.enaccord.app.service.UtilisateurDetailService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class UtilisateurDetailServiceTest {
+public class UtilisateurDetailServiceTest {
 
     @Mock
     private UtilisateurRepository utilisateurRepository;

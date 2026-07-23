@@ -1,153 +1,211 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}" lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Modifier la chanson - En Accord</title>
-    <style>
-        body { font-family: sans-serif; background-color: #f8fafc; padding: 40px; color: #1e293b; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+    <title>Modifier la chanson</title>
 
-        /* Styles de l'éditeur interactif */
-        .lyrics-line { margin-top: 25px; margin-bottom: 10px; font-family: monospace; font-size: 1.1rem; white-space: pre; }
-        .clickable-char { position: relative; cursor: pointer; padding: 0 1px; display: inline-block; }
-        .clickable-char:hover { background-color: #eedffc; }
-        .clickable-char[data-chord]::before {
-            content: attr(data-chord);
-            position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
-            background-color: #7c3aed; color: white; font-size: 0.8rem; font-weight: bold;
-            padding: 2px 6px; border-radius: 4px; white-space: nowrap; z-index: 10;
-        }
-        .chord-selector { margin-bottom: 15px; }
-        .chord-selector input[type="radio"] { display: none; }
-        .chord-selector label { display: inline-block; padding: 8px 16px; background: #e2e8f0; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 5px; }
-        .chord-selector input[type="radio"]:checked + label { background: #7c3aed; color: white; }
-        .btn { background: #7c3aed; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; text-decoration: none; }
-        .btn-cancel { background: #64748b; margin-left: 10px; }
-    </style>
+    <!-- Styles spécifiques à l'éditeur interactif de chansons -->
+    <th:block layout:fragment="css">
+        <style>
+            .editor-card {
+                background: white;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            }
+            .editor-card h2 {
+                margin-top: 0;
+                margin-bottom: 24px;
+                font-family: 'Fraunces', serif;
+                color: var(--ink);
+            }
+            .form-group { margin-bottom: 20px; }
+            .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--ink-soft); font-size: 0.95rem; }
+
+            input[type="text"] {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid var(--slate);
+                border-radius: 6px;
+                box-sizing: border-box;
+                font-family: inherit;
+                font-size: 0.95rem;
+                transition: border-color 0.15s ease;
+            }
+            input[type="text"]:focus {
+                outline: none;
+                border-color: var(--mustard-deep);
+            }
+
+            /* Styles de l'éditeur interactif */
+            .lyrics-line { margin-top: 25px; margin-bottom: 10px; font-family: monospace; font-size: 1.1rem; white-space: pre; }
+            .clickable-char { position: relative; cursor: pointer; padding: 0 1px; display: inline-block; }
+            .clickable-char:hover { background-color: rgba(227, 178, 60, 0.2); }
+
+            .clickable-char[data-chord]::before {
+                content: attr(data-chord);
+                position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
+                background-color: var(--ink); color: var(--mustard); font-size: 0.8rem; font-weight: bold;
+                padding: 2px 6px; border-radius: 4px; white-space: nowrap; z-index: 10;
+                border: 1px solid rgba(227, 178, 60, 0.3);
+            }
+
+            .chord-selector { margin-bottom: 15px; display: flex; gap: 8px; }
+            .chord-selector input[type="radio"] { display: none; }
+            .chord-selector label {
+                display: inline-block; padding: 10px 18px; background: var(--cream);
+                color: var(--ink-soft); border-radius: 6px; cursor: pointer; font-weight: bold;
+                border: 1px solid rgba(43, 36, 26, 0.08); transition: all 0.15s ease;
+            }
+            .chord-selector input[type="radio"]:checked + label {
+                background: var(--mustard); color: var(--ink); border-color: transparent;
+            }
+
+            .actions-bar {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-top: 24px;
+                padding-top: 20px;
+                border-top: 1px solid rgba(0,0,0,0.06);
+            }
+        </style>
+    </th:block>
 </head>
 <body>
 
-<div class="container">
-    <h2>Modifier la chanson</h2>
+<div layout:fragment="content">
 
-    <form th:action="@{/chansons/{id}/modifier(id=${chanson.id})}"
-          th:object="${chanson}"
-          method="POST"
-          onsubmit="preparerEnvoi(event)">
+    <div class="editor-card">
+        <h2><i class="fa-solid fa-pen-to-square"></i> Modifier la chanson</h2>
 
-        <div class="form-group">
-            <label for="titre">Titre :</label>
-            <input type="text" id="titre" th:field="*{titre}" required>
-        </div>
+        <form th:action="@{/chansons/{id}/modifier(id=${chanson.id})}"
+              th:object="${chanson}"
+              method="POST"
+              onsubmit="preparerEnvoi(event)">
 
-        <div class="form-group">
-            <label for="artiste">Artiste / Groupe :</label>
-            <input type="text" id="artiste" th:field="*{artiste}" required>
-        </div>
-
-        <div class="form-group">
-            <label>Éditeur d'accords interactif :</label>
-            <div class="chord-selector">
-                <input type="radio" id="chord-C" name="activeChord" value="C" checked>
-                <label for="chord-C">C</label>
-                <input type="radio" id="chord-G" name="activeChord" value="G">
-                <label for="chord-G">G</label>
-                <input type="radio" id="chord-Am" name="activeChord" value="Am">
-                <label for="chord-Am">Am</label>
-                <input type="radio" id="chord-F" name="activeChord" value="F">
-                <label for="chord-F">F</label>
+            <div class="form-group">
+                <label for="titre">Titre de la chanson :</label>
+                <input type="text" id="titre" th:field="*{titre}" required autocomplete="off">
             </div>
-        </div>
 
-        <div id="interactiveWorkspace" style="border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fdfdfd;"></div>
+            <div class="form-group">
+                <label for="artiste">Artiste / Groupe :</label>
+                <input type="text" id="artiste" th:field="*{artiste}" required autocomplete="off">
+            </div>
 
-        <div id="rawChordPro" style="display: none;" th:text="*{contenuChordPro}"></div>
-        <input type="hidden" id="finalChordProInput" th:field="*{contenuChordPro}">
+            <div class="form-group">
+                <label>Éditeur d'accords interactif :</label>
+                <div class="chord-selector">
+                    <input type="radio" id="chord-C" name="activeChord" value="C" checked>
+                    <label for="chord-C">C</label>
+                    <input type="radio" id="chord-G" name="activeChord" value="G">
+                    <label for="chord-G">G</label>
+                    <input type="radio" id="chord-Am" name="activeChord" value="Am">
+                    <label for="chord-Am">Am</label>
+                    <input type="radio" id="chord-F" name="activeChord" value="F">
+                    <label for="chord-F">F</label>
+                </div>
+            </div>
 
-        <button type="submit" class="btn">Enregistrer les modifications</button>
-        <a th:href="@{/chansons/{id}(id=${chanson.id})}" class="btn btn-cancel">Annuler</a>
-    </form>
+            <div id="interactiveWorkspace" style="border: 1px solid rgba(43,36,26,0.12); padding: 24px; border-radius: 8px; margin-bottom: 20px; background: #faf9f6;"></div>
+
+            <!-- Données cachées gérées par le script -->
+            <div id="rawChordPro" style="display: none;" th:text="*{contenuChordPro}"></div>
+            <input type="hidden" id="finalChordProInput" th:field="*{contenuChordPro}">
+
+            <div class="actions-bar">
+                <button type="submit" class="btn-auth primary">
+                    <i class="fa-solid fa-floppy-disk"></i> Enregistrer les modifications
+                </button>
+                <a th:href="@{/chansons/{id}(id=${chanson.id})}" class="btn-auth ghost" style="text-decoration: none; color: var(--ink); border-color: var(--slate);">
+                    Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const rawText = document.getElementById('rawChordPro').textContent;
-        const workspace = document.getElementById('interactiveWorkspace');
+<!-- Script logique conservé à l'identique pour assurer le bon fonctionnement fonctionnel -->
+<th:block layout:fragment="js">
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const rawText = document.getElementById('rawChordPro').textContent;
+            const workspace = document.getElementById('interactiveWorkspace');
 
-        const lines = rawText.split('\n');
+            const lines = rawText.split('\n');
 
-        lines.forEach(line => {
-            const lineDiv = document.createElement('div');
-            lineDiv.className = 'lyrics-line';
+            lines.forEach(line => {
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'lyrics-line';
 
-            if (line.trim() === '') {
-                lineDiv.innerHTML = '&nbsp;';
-            } else {
-                // Découpe le format ChordPro pour générer les spans
-                const parts = line.split(/(\[.*?\])/g);
-                let currentChord = null;
+                if (line.trim() === '') {
+                    lineDiv.innerHTML = '&nbsp;';
+                } else {
+                    const parts = line.split(/(\[.*?\])/g);
+                    let currentChord = null;
 
-                parts.forEach(part => {
-                    if (part.startsWith('[') && part.endsWith(']')) {
-                        currentChord = part.slice(1, -1);
-                    } else {
-                        for (let i = 0; i < part.length; i++) {
-                            const charSpan = document.createElement('span');
-                            charSpan.className = 'clickable-char';
-                            charSpan.textContent = part[i];
+                    parts.forEach(part => {
+                        if (part.startsWith('[') && part.endsWith(']')) {
+                            currentChord = part.slice(1, -1);
+                        } else {
+                            for (let i = 0; i < part.length; i++) {
+                                const charSpan = document.createElement('span');
+                                charSpan.className = 'clickable-char';
+                                charSpan.textContent = part[i];
 
-                            // Si on a un accord en attente, on l'applique sur la première lettre de ce morceau de texte
-                            if (i === 0 && currentChord) {
-                                charSpan.setAttribute('data-chord', currentChord);
-                                currentChord = null;
-                            }
-
-                            charSpan.addEventListener('click', function() {
-                                const accordSelectionne = document.querySelector('input[name="activeChord"]:checked').value;
-                                if (this.getAttribute('data-chord') === accordSelectionne) {
-                                    this.removeAttribute('data-chord');
-                                } else {
-                                    this.setAttribute('data-chord', accordSelectionne);
+                                if (i === 0 && currentChord) {
+                                    charSpan.setAttribute('data-chord', currentChord);
+                                    currentChord = null;
                                 }
-                            });
-                            lineDiv.appendChild(charSpan);
+
+                                charSpan.addEventListener('click', function() {
+                                    const accordSelectionne = document.querySelector('input[name="activeChord"]:checked').value;
+                                    if (this.getAttribute('data-chord') === accordSelectionne) {
+                                        this.removeAttribute('data-chord');
+                                    } else {
+                                        this.setAttribute('data-chord', accordSelectionne);
+                                    }
+                                });
+                                lineDiv.appendChild(charSpan);
+                            }
                         }
-                    }
-                });
-            }
-            workspace.appendChild(lineDiv);
-        });
-    });
-
-    // Compile à nouveau au format ChordPro avant d'envoyer
-    function preparerEnvoi(event) {
-        let chordProResultat = [];
-        const lignesVisuelles = document.querySelectorAll('.lyrics-line');
-
-        lignesVisuelles.forEach(lineDiv => {
-            let ligneConstruite = "";
-            const caracteres = lineDiv.querySelectorAll('.clickable-char');
-
-            if (caracteres.length === 0) {
-                chordProResultat.push("");
-                return;
-            }
-
-            caracteres.forEach(charSpan => {
-                if (charSpan.hasAttribute('data-chord')) {
-                    const accord = charSpan.getAttribute('data-chord');
-                    ligneConstruite += `[${accord}]`;
+                    });
                 }
-                ligneConstruite += charSpan.textContent;
+                workspace.appendChild(lineDiv);
             });
-            chordProResultat.push(ligneConstruite);
         });
 
-        document.getElementById('finalChordProInput').value = chordProResultat.join('\n');
-    }
-</script>
+        function preparerEnvoi(event) {
+            let chordProResultat = [];
+            const lignesVisuelles = document.querySelectorAll('.lyrics-line');
+
+            lignesVisuelles.forEach(lineDiv => {
+                let ligneConstruite = "";
+                const caracteres = lineDiv.querySelectorAll('.clickable-char');
+
+                if (caracteres.length === 0) {
+                    chordProResultat.push("");
+                    return;
+                }
+
+                caracteres.forEach(charSpan => {
+                    if (charSpan.hasAttribute('data-chord')) {
+                        const accord = charSpan.getAttribute('data-chord');
+                        ligneConstruite += `[${accord}]`;
+                    }
+                    ligneConstruite += charSpan.textContent;
+                });
+                chordProResultat.push(ligneConstruite);
+            });
+
+            document.getElementById('finalChordProInput').value = chordProResultat.join('\n');
+        }
+    </script>
+</th:block>
 </body>
 </html>

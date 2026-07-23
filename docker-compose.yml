@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: enaccord-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: le_juste_accord
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  nginx:
+    build: ./nginx
+    container_name: enaccord-nginx
+    restart: always
+    ports:
+      - "8085:80"
+    depends_on:
+      - app
+  app:
+    build: .
+    container_name: enaccord-app
+    restart: always
+    depends_on:
+      - db
+    # On supprime la section ports: "8080:8080" pour que seule la passerelle Nginx expose l'application
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/le_juste_accord?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+
+volumes:
+  mysql_data:

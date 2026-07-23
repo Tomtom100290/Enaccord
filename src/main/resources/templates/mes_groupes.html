@@ -1,80 +1,163 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}" lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mes Groupes - Le Juste Accord</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; padding: 40px; color: #1e293b; }
-        .container { max-width: 800px; margin: 0 auto; }
-        h1, h2 { color: #7c3aed; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; }
+    <title>Mes Groupes</title>
 
-        /* Invitations */
-        .invitation-item { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
-        .btn-accept { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .btn-refuse { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    <!-- Styles spécifiques à la page des groupes intégrés à la charte graphique -->
+    <th:block layout:fragment="css">
+        <style>
+            .page-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+            }
+            .page-header h1 {
+                margin: 0;
+                font-family: 'Fraunces', serif;
+                color: var(--ink);
+            }
+            .card-alert {
+                background: white;
+                padding: 24px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+                margin-bottom: 30px;
+                border-left: 4px solid #f97316;
+            }
+            .card-alert h2 {
+                margin-top: 0;
+                font-size: 1.25rem;
+                color: #f97316;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .invitation-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: var(--cream);
+                padding: 16px;
+                border-radius: 8px;
+                margin-bottom: 12px;
+                border: 1px solid rgba(43, 36, 26, 0.08);
+            }
+            .invitation-item:last-child { margin-bottom: 0; }
 
-        /* Groupes */
-        .group-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        .group-card { display: flex; gap: 20px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; }
-        .group-image { width: 120px; height: 120px; border-radius: 8px; object-fit: cover; background: #e2e8f0; }
-        .group-details { flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .member-list { margin-top: 10px; font-size: 0.9rem; color: #475569; }
-        .member-badge { background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-left: 5px; font-size: 0.8rem; }
+            .group-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+            .group-card {
+                display: flex;
+                gap: 24px;
+                background: white;
+                padding: 24px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+                border: 1px solid rgba(0,0,0,0.02);
+            }
+            .group-image {
+                width: 120px;
+                height: 120px;
+                border-radius: 8px;
+                object-fit: cover;
+                background: var(--slate);
+                flex-shrink: 0;
+            }
+            .group-details {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+            .group-details h3 {
+                margin: 0 0 6px 0;
+                color: var(--ink);
+                font-family: 'Fraunces', serif;
+                font-size: 1.4rem;
+            }
+            .member-list {
+                margin-top: 16px;
+                font-size: 0.9rem;
+            }
+            .member-tag {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: var(--cream);
+                color: var(--ink-soft);
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 0.85rem;
+                border: 1px solid rgba(43, 36, 26, 0.08);
+            }
+            .member-badge {
+                color: var(--mustard-deep);
+                font-weight: 600;
+                font-size: 0.8rem;
+            }
 
-        /* Bouton Voir le Groupe */
-        .btn-view {
-            align-self: flex-end;
-            background: #7c3aed;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 0.9rem;
-            transition: background 0.2s ease;
-            margin-top: 15px;
-        }
-        .btn-view:hover {
-            background: #6d28d9;
-        }
-    </style>
+            .empty-state {
+                background: white;
+                padding: 40px;
+                text-align: center;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+                color: var(--slate);
+            }
+
+            @media (max-width: 600px) {
+                .group-card { flex-direction: column; gap: 16px; }
+                .group-image { width: 100%; height: 160px; }
+                .invitation-item { flex-direction: column; gap: 12px; align-items: stretch; text-align: center; }
+                .invitation-item div { justify-content: center; }
+            }
+        </style>
+    </th:block>
 </head>
 <body>
 
-<div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+<div layout:fragment="content">
+
+    <div class="page-header">
         <h1>🎸 Mon Espace Groupes</h1>
-        <a th:href="@{/groupes/nouveau}" style="background-color: #7c3aed; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold;">
-            ➕ Créer un Groupe
+        <a th:href="@{/groupes/nouveau}" class="btn-auth primary" style="text-decoration: none;">
+            <i class="fa-solid fa-plus"></i> Créer un Groupe
         </a>
     </div>
 
-    <!-- Invitations -->
-    <div class="card" th:if="${!invitations.isEmpty()}">
-        <h2 style="color: #f97316;">📩 Demandes d'invitations reçues</h2>
+    <!-- Section Invitations en attente -->
+    <div class="card-alert" th:if="${!invitations.isEmpty()}">
+        <h2><i class="fa-solid fa-envelope-open-text"></i> Demandes d'invitations reçues</h2>
         <div th:each="invit : ${invitations}" class="invitation-item">
             <div>
                 Vous êtes invité à rejoindre le groupe <strong th:text="${invit.groupe.nomDuGroupe}">Nom Groupe</strong> !
             </div>
-            <div style="display: flex; gap: 10px;">
-                <form th:action="@{/groupes/invitations/{id}/accepter(id=${invit.id})}" method="POST">
-                    <button type="submit" class="btn-accept">Accepter</button>
+            <div style="display: flex; gap: 8px;">
+                <form th:action="@{/groupes/invitations/{id}/accepter(id=${invit.id})}" method="POST" style="margin:0;">
+                    <button type="submit" class="btn-auth primary" style="padding: 6px 12px; font-size: 0.8rem;">Accepter</button>
                 </form>
-                <form th:action="@{/groupes/invitations/{id}/refuser(id=${invit.id})}" method="POST">
-                    <button type="submit" class="btn-refuse">Décliner</button>
+                <form th:action="@{/groupes/invitations/{id}/refuser(id=${invit.id})}" method="POST" style="margin:0;">
+                    <button type="submit" class="btn-auth logout" style="padding: 6px 12px; font-size: 0.8rem;">Décliner</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <h2>👥 Mes Groupes de Musique</h2>
-    <div th:if="${adhesions.isEmpty()}">
-        <p>Vous ne faites partie d'aucun groupe pour le moment. Créez-en un ou attendez de vous faire inviter !</p>
+    <!-- Section Liste des Groupes -->
+    <div th:if="${adhesions.isEmpty()}" class="empty-state">
+        <i class="fa-solid fa-people-group" style="font-size: 2.5rem; margin-bottom: 12px; color: var(--slate);"></i>
+        <p style="margin: 0;">Vous ne faites partie d'aucun groupe pour le moment. Créez-en un ou attendez une invitation !</p>
     </div>
 
-    <!-- Liste des Groupes -->
-    <div class="group-grid">
+    <div class="group-grid" th:if="${!adhesions.isEmpty()}">
         <div th:each="adhesion : ${adhesions}" class="group-card">
             <img class="group-image"
                  th:src="${adhesion.groupe.image != null && !adhesion.groupe.image.isEmpty() ? adhesion.groupe.image : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150'}"
@@ -82,28 +165,41 @@
 
             <div class="group-details">
                 <div>
-                    <h3 th:text="${adhesion.groupe.nomDuGroupe}" style="margin: 0 0 5px 0; color: #7c3aed; font-size: 1.4rem;">Nom du Groupe</h3>
-                    <p th:text="${adhesion.groupe.description}" style="margin: 0; color: #64748b;">Description du groupe</p>
+                    <h3 th:text="${adhesion.groupe.nomDuGroupe}">Nom du Groupe</h3>
+                    <p th:text="${adhesion.groupe.description}" style="margin: 0; color: #64748b; font-size: 0.95rem;">Description du groupe</p>
 
                     <div class="member-list">
-                        <strong>Membres du groupe :</strong>
-                        <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
-                            <span th:each="m : ${adhesion.groupe.membres}" style="background: #f1f5f9; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem;">
-                                👤 <span th:text="${m.utilisateur.pseudo}">Pseudo</span>
-                                <span class="member-badge" th:if="${m.utilisateur.poste != null && !m.utilisateur.poste.isEmpty()}" th:text="${m.utilisateur.poste}">Guitare</span>
-                            </span>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+                                <span th:each="m : ${adhesion.groupe.membres}" class="member-tag">
+                                    <i class="fa-solid fa-user" style="font-size: 0.75rem; color: var(--slate);"></i>
+                                    <span th:text="${m.utilisateur.pseudo}">Pseudo</span>
+                                    <span class="member-badge" th:if="${m.utilisateur.poste != null && !m.utilisateur.poste.isEmpty()}" th:text="'· ' + ${m.utilisateur.poste}">· Guitare</span>
+                                </span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Bouton d'accès aux détails du groupe -->
-                <a th:href="@{/groupes/{id}(id=${adhesion.groupe.id})}" class="btn-view">
-                    👁️ Voir le groupe
-                </a>
+                <!-- Zone d'actions sur le groupe -->
+                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+                    <!-- Bouton Modifier (Visible uniquement si l'utilisateur connecté est ADMIN du groupe) -->
+                    <a th:if="${adhesion.role == 'ADMIN'}"
+                       th:href="@{/groupes/{id}/modifier(id=${adhesion.groupe.id})}"
+                       class="btn-auth ghost"
+                       style="text-decoration: none; border-color: rgba(0,0,0,0.15); color: var(--ink);">
+                        <i class="fa-solid fa-pen"></i> Modifier
+                    </a>
+
+                    <!-- Bouton Voir -->
+                    <a th:href="@{/groupes/{id}(id=${adhesion.groupe.id})}" class="btn-auth ghost" style="text-decoration: none; border-color: var(--slate); color: var(--ink);">
+                        <i class="fa-solid fa-eye"></i> Voir le groupe
+                    </a>
+                </div>
             </div>
         </div>
     </div>
+
 </div>
 
+<th:block layout:fragment="js"></th:block>
 </body>
 </html>

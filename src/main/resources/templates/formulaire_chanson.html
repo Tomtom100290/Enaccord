@@ -1,109 +1,289 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}" lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mes Groupes - Le Juste Accord</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; padding: 40px; color: #1e293b; }
-        .container { max-width: 800px; margin: 0 auto; }
-        h1, h2 { color: #7c3aed; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; }
+    <title>Ajouter une chanson personnelle</title>
 
-        /* Invitations */
-        .invitation-item { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
-        .btn-accept { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .btn-refuse { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    <!-- Styles spécifiques à l'éditeur interactif de partitions ChordPro -->
+    <th:block layout:fragment="css">
+        <style>
+            .editor-card {
+                background: white;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+                max-width: 850px;
+                margin: 0 auto;
+            }
+            .editor-card h1 {
+                margin-top: 0;
+                margin-bottom: 6px;
+                font-family: 'Fraunces', serif;
+                color: var(--ink);
+                font-size: 2rem;
+            }
+            .editor-card h2 {
+                color: var(--slate);
+                font-size: 1.1rem;
+                margin-top: 0;
+                margin-bottom: 24px;
+                font-weight: normal;
+            }
+            .form-group { margin-bottom: 20px; }
+            .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--ink-soft); font-size: 0.95rem; }
 
-        /* Groupes */
-        .group-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        .group-card { display: flex; gap: 20px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; }
-        .group-image { width: 120px; height: 120px; border-radius: 8px; object-fit: cover; background: #e2e8f0; }
-        .group-details { flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .member-list { margin-top: 10px; font-size: 0.9rem; color: #475569; }
-        .member-badge { background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-left: 5px; font-size: 0.8rem; }
+            input[type="text"], textarea {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid var(--slate);
+                border-radius: 6px;
+                box-sizing: border-box;
+                font-family: inherit;
+                font-size: 0.95rem;
+                transition: border-color 0.15s ease;
+            }
+            input[type="text"]:focus, textarea:focus {
+                outline: none;
+                border-color: var(--mustard-deep);
+            }
 
-        /* Bouton Voir le Groupe */
-        .btn-view {
-            align-self: flex-end;
-            background: #7c3aed;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 0.9rem;
-            transition: background 0.2s ease;
-            margin-top: 15px;
-        }
-        .btn-view:hover {
-            background: #6d28d9;
-        }
-    </style>
+            /* Editeur interactif de caractères */
+            .lyrics-line {
+                margin-top: 24px;
+                margin-bottom: 8px;
+                font-family: 'Courier New', Courier, monospace;
+                font-size: 1.15rem;
+                white-space: pre;
+                line-height: 1.8;
+            }
+            .clickable-char {
+                position: relative;
+                cursor: pointer;
+                padding: 0 1px;
+                display: inline-block;
+            }
+            .clickable-char:hover {
+                background-color: var(--cream);
+                border-radius: 3px;
+            }
+            .clickable-char[data-chord]::before {
+                content: attr(data-chord);
+                position: absolute;
+                bottom: 115%;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: var(--ink);
+                color: white;
+                font-size: 0.75rem;
+                font-weight: 700;
+                padding: 2px 6px;
+                border-radius: 4px;
+                white-space: nowrap;
+                z-index: 10;
+                line-height: 1;
+            }
+
+            /* Grille de sélection des accords */
+            .chord-selector { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 8px; }
+            .chord-selector input[type="radio"] { display: none; }
+            .chord-selector label {
+                display: inline-block;
+                padding: 8px 16px;
+                background: #faf9f6;
+                border: 1px solid rgba(43, 36, 26, 0.08);
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 0.9rem;
+                transition: all 0.15s ease;
+            }
+            .chord-selector input[type="radio"]:checked + label {
+                background-color: var(--accent-color);
+                border-color: var(--accent-color);
+                color: white;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            }
+
+            .workspace-box {
+                border: 1px dashed var(--slate);
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 24px;
+                background: #fff;
+                min-height: 150px;
+                overflow-x: auto;
+            }
+        </style>
+    </th:block>
 </head>
 <body>
 
-<div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h1>🎸 Mon Espace Groupes</h1>
-        <a th:href="@{/groupes/nouveau}" style="background-color: #7c3aed; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold;">
-            ➕ Créer un Groupe
-        </a>
-    </div>
+<div layout:fragment="content">
 
-    <!-- Invitations -->
-    <div class="card" th:if="${!invitations.isEmpty()}">
-        <h2 style="color: #f97316;">📩 Demandes d'invitations reçues</h2>
-        <div th:each="invit : ${invitations}" class="invitation-item">
-            <div>
-                Vous êtes invité à rejoindre le groupe <strong th:text="${invit.groupe.nomDuGroupe}">Nom Groupe</strong> !
+    <div class="editor-card">
+        <h1><i class="fa-solid fa-square-plus"></i> Ajouter une chanson personnelle</h1>
+        <h2>Répertoire privé : <strong style="color: var(--ink);">Espace personnel</strong></h2>
+
+        <!--
+            CORRECTION : un seul <form> englobe désormais les deux étapes
+            (importSection + editorSection), avec th:object porté par ce
+            form unique. th:field a besoin d'un th:object parent pour
+            résoudre le champ : le textarea de l'étape 1 plantait car il
+            était auparavant en dehors de tout <form th:object="...">.
+            Les formulaires HTML imbriqués n'étant de toute façon pas
+            valides, editorSection redevient une simple <div>.
+        -->
+        <form id="mainForm"
+              th:action="@{/chansons/enregistrer}"
+              th:object="${chanson}"
+              method="POST"
+              onsubmit="preparerEnvoi(event)">
+
+            <!-- Étape 1 : Injection des paroles brutes -->
+            <div id="importSection">
+                <div class="form-group">
+                    <label for="contenuChordPro">Paroles et Accords (Format ChordPro) :</label>
+                    <textarea id="contenuChordPro" th:field="*{contenuChordPro}" rows="15" placeholder="Ex: [C]Au clair de la [G]lune..."></textarea>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn-auth primary" onclick="genererEditeurInteractif()">
+                        Passer à l'édition d'accords <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <a th:href="@{/}" class="btn-auth ghost" style="text-decoration: none; color: var(--ink); border-color: var(--slate);">Annuler</a>
+                </div>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <form th:action="@{/groupes/invitations/{id}/accepter(id=${invit.id})}" method="POST">
-                    <button type="submit" class="btn-accept">Accepter</button>
-                </form>
-                <form th:action="@{/groupes/invitations/{id}/refuser(id=${invit.id})}" method="POST">
-                    <button type="submit" class="btn-refuse">Décliner</button>
-                </form>
-            </div>
-        </div>
-    </div>
 
-    <h2>👥 Mes Groupes de Musique</h2>
-    <div th:if="${adhesions.isEmpty()}">
-        <p>Vous ne faites partie d'aucun groupe pour le moment. Créez-en un ou attendez de vous faire inviter !</p>
-    </div>
+            <!-- Étape 2 : Éditeur intelligent de ChordPro -->
+            <div id="editorSection" style="display: none;">
 
-    <!-- Liste des Groupes -->
-    <div class="group-grid">
-        <div th:each="adhesion : ${adhesions}" class="group-card">
-            <img class="group-image"
-                 th:src="${adhesion.groupe.image != null && !adhesion.groupe.image.isEmpty() ? adhesion.groupe.image : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150'}"
-                 alt="Image du groupe">
+                <div class="form-group">
+                    <label for="titre">Titre de la chanson :</label>
+                    <input type="text" id="titre" th:field="*{titre}" required placeholder="Ex: L'Hymne du Dimanche" autocomplete="off">
+                </div>
 
-            <div class="group-details">
-                <div>
-                    <h3 th:text="${adhesion.groupe.nomDuGroupe}" style="margin: 0 0 5px 0; color: #7c3aed; font-size: 1.4rem;">Nom du Groupe</h3>
-                    <p th:text="${adhesion.groupe.description}" style="margin: 0; color: #64748b;">Description du groupe</p>
+                <div class="form-group">
+                    <label for="artiste">Auteur / Artiste original :</label>
+                    <input type="text" id="artiste" th:field="*{artiste}" required placeholder="Ex: Jean-Jacques Goldman" autocomplete="off">
+                </div>
 
-                    <div class="member-list">
-                        <strong>Membres du groupe :</strong>
-                        <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
-                            <span th:each="m : ${adhesion.groupe.membres}" style="background: #f1f5f9; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem;">
-                                👤 <span th:text="${m.utilisateur.pseudo}">Pseudo</span>
-                                <span class="member-badge" th:if="${m.utilisateur.poste != null && !m.utilisateur.poste.isEmpty()}" th:text="${m.utilisateur.poste}">Guitare</span>
-                            </span>
-                        </div>
+                <div class="form-group">
+                    <label>2. Choisissez votre accord actif puis cliquez sur les lettres des paroles pour le positionner :</label>
+                    <div class="chord-selector">
+                        <th:block th:each="acc, iterStat : ${accordsDisponibles}">
+                            <input type="radio"
+                                   th:id="'chord-' + ${acc.libelleEn}"
+                                   name="activeChord"
+                                   th:value="${acc.libelleEn}"
+                                   th:checked="${iterStat.first}"
+                                   th:data-color="${acc.couleur}">
+                            <label th:for="'chord-' + ${acc.libelleEn}"
+                                   th:style="'--accent-color:' + ${acc.couleur}"
+                                   th:text="${acc.libelleEn} + ' (' + ${acc.libelleFr} + ')'">
+                                C (Do)
+                            </label>
+                        </th:block>
                     </div>
                 </div>
 
-                <!-- Bouton d'accès aux détails du groupe -->
-                <a th:href="@{/groupes/{id}(id=${adhesion.groupe.id})}" class="btn-view">
-                    👁️ Voir le groupe
-                </a>
+                <!-- Zone d'injection interactive JavaScript -->
+                <div id="interactiveWorkspace" class="workspace-box"></div>
+
+                <!-- Récupération finale structurée Thymeleaf -->
+                <input type="hidden" id="finalChordProInput" th:field="*{contenuChordPro}">
+
+                <div style="display: flex; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.06);">
+                    <button type="submit" class="btn-auth primary">
+                        <i class="fa-solid fa-floppy-disk"></i> Enregistrer dans mon répertoire
+                    </button>
+                    <a th:href="@{/}" class="btn-auth ghost" style="text-decoration: none; color: var(--ink); border-color: var(--slate);">Annuler</a>
+                </div>
             </div>
-        </div>
+        </form>
     </div>
+
 </div>
 
+<!-- Script de traitement dynamique et de mapping ChordPro -->
+<th:block layout:fragment="js">
+    <script>
+        function genererEditeurInteractif() {
+            // CORRECTION ICI : on cible le bon ID du textarea
+            const texteBrut = document.getElementById('contenuChordPro').value;
+            if (!texteBrut.trim()) {
+                alert("Veuillez renseigner des paroles valides avant de continuer.");
+                return;
+            }
+
+            const workspace = document.getElementById('interactiveWorkspace');
+            workspace.innerHTML = '';
+
+            const lignes = texteBrut.split('\n');
+
+            lignes.forEach(ligneText => {
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'lyrics-line';
+
+                if (ligneText.trim() === '') {
+                    lineDiv.innerHTML = '&nbsp;';
+                } else {
+                    for (let i = 0; i < ligneText.length; i++) {
+                        const charSpan = document.createElement('span');
+                        charSpan.className = 'clickable-char';
+                        charSpan.textContent = ligneText[i];
+
+                        charSpan.addEventListener('click', function() {
+                            const activeRadio = document.querySelector('input[name="activeChord"]:checked');
+                            if (!activeRadio) return;
+
+                            const accordSelectionne = activeRadio.value;
+
+                            if (this.getAttribute('data-chord') === accordSelectionne) {
+                                this.removeAttribute('data-chord');
+                            } else {
+                                this.setAttribute('data-chord', accordSelectionne);
+                            }
+                        });
+
+                        lineDiv.appendChild(charSpan);
+                    }
+                }
+                workspace.appendChild(lineDiv);
+            });
+
+            document.getElementById('importSection').style.display = 'none';
+            document.getElementById('editorSection').style.display = 'block';
+        }
+
+        function preparerEnvoi(event) {
+            let chordProResultat = [];
+            const lignesVisuelles = document.querySelectorAll('.lyrics-line');
+
+            lignesVisuelles.forEach(lineDiv => {
+                let ligneConstruite = "";
+                const caracteres = lineDiv.querySelectorAll('.clickable-char');
+
+                if (caracteres.length === 0) {
+                    chordProResultat.push("");
+                    return;
+                }
+
+                caracteres.forEach(charSpan => {
+                    if (charSpan.hasAttribute('data-chord')) {
+                        const accord = charSpan.getAttribute('data-chord');
+                        ligneConstruite += `[${accord}]`;
+                    }
+                    ligneConstruite += charSpan.textContent;
+                });
+
+                chordProResultat.push(ligneConstruite);
+            });
+
+            document.getElementById('finalChordProInput').value = chordProResultat.join('\n');
+        }
+    </script>
+</th:block>
 </body>
 </html>

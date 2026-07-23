@@ -1,112 +1,180 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}" lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Créer un Groupe - Le Juste Accord</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; padding: 40px; color: #1e293b; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h2 { color: #7c3aed; margin-top: 0; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; }
-        input, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
-        .btn { background: #7c3aed; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    <title>Créer un Groupe</title>
 
-        /* Zone d'invitation des membres */
-        .invite-box { display: flex; gap: 10px; margin-bottom: 10px; }
-        .member-tag { display: inline-flex; align-items: center; background: #e2e8f0; padding: 6px 12px; border-radius: 20px; margin: 5px; font-size: 0.9rem; }
-        .member-tag button { background: none; border: none; color: #ef4444; margin-left: 8px; cursor: pointer; font-weight: bold; }
-        .error-msg { color: #ef4444; font-size: 0.85rem; display: none; margin-top: 5px; }
-    </style>
+    <!-- Styles spécifiques au formulaire de création de groupe et à l'invite-box -->
+    <th:block layout:fragment="css">
+        <style>
+            .group-card {
+                background: white;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+                max-width: 650px;
+                margin: 0 auto;
+            }
+            .group-card h2 {
+                margin-top: 0;
+                margin-bottom: 24px;
+                font-family: 'Fraunces', serif;
+                color: var(--ink);
+            }
+            .form-group { margin-bottom: 20px; }
+            .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--ink-soft); font-size: 0.95rem; }
+
+            input[type="text"], input[type="email"], textarea {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid var(--slate);
+                border-radius: 6px;
+                box-sizing: border-box;
+                font-family: inherit;
+                font-size: 0.95rem;
+                transition: border-color 0.15s ease;
+            }
+            input[type="text"]:focus, input[type="email"]:focus, textarea:focus {
+                outline: none;
+                border-color: var(--mustard-deep);
+            }
+
+            /* Zone d'invitation des membres */
+            .invite-box { display: flex; gap: 10px; margin-bottom: 10px; }
+            .invite-box input { flex: 1; }
+
+            .member-tag {
+                display: inline-flex;
+                align-items: center;
+                background: var(--cream);
+                color: var(--ink-soft);
+                padding: 6px 14px;
+                border-radius: 20px;
+                margin: 5px;
+                font-size: 0.88rem;
+                font-weight: 500;
+                border: 1px solid rgba(43, 36, 26, 0.08);
+            }
+            .member-tag button {
+                background: none;
+                border: none;
+                color: #ef4444;
+                margin-left: 8px;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 1rem;
+                padding: 0 2px;
+            }
+            .error-msg { color: #ef4444; font-size: 0.85rem; display: none; margin-top: 5px; font-weight: 500; }
+
+            .actions-bar {
+                margin-top: 24px;
+                padding-top: 20px;
+                border-top: 1px solid rgba(0,0,0,0.06);
+            }
+        </style>
+    </th:block>
 </head>
 <body>
 
-<div class="container">
-    <h2>Créer un nouveau groupe de musique</h2>
+<div layout:fragment="content">
 
-    <form th:action="@{/groupes/creer}" method="POST">
-        <div class="form-group">
-            <label>Nom du groupe :</label>
-            <input type="text" name="nomDuGroupe" required placeholder="Ex: Les Rockers du Dimanche">
-        </div>
+    <div class="group-card">
+        <h2><i class="fa-solid fa-users-rectangle"></i> Créer un nouveau groupe</h2>
 
-        <div class="form-group">
-            <label>Description :</label>
-            <textarea name="description" rows="3" placeholder="Présentez votre groupe..."></textarea>
-        </div>
-
-        <div class="form-group">
-            <label>Lien de l'image (URL) :</label>
-            <input type="text" name="image" placeholder="https://lien-vers-image.jpg">
-        </div>
-
-        <div class="form-group">
-            <label>Inviter des membres par adresse Email :</label>
-            <div class="invite-box">
-                <input type="email" id="emailInput" placeholder="adresse@mail.com">
-                <button type="button" class="btn" onclick="ajouterMembreALaListe()" style="background: #10b981;">Ajouter</button>
-            </div>
-            <p id="errorEmail" class="error-msg">Email invalide ou déjà ajouté.</p>
-
-            <div id="listeMembresVisuelle" style="margin-top: 15px; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 6px; min-height: 50px;">
+        <form th:action="@{/groupes/creer}" method="POST">
+            <div class="form-group">
+                <label for="nomDuGroupe">Nom du groupe :</label>
+                <input type="text" id="nomDuGroupe" name="nomDuGroupe" required placeholder="Ex: Les Rockers du Dimanche" autocomplete="off">
             </div>
 
-            <input type="hidden" id="listeEmailsSynthese" name="emailsInvites" value="">
-        </div>
+            <div class="form-group">
+                <label for="description">Description :</label>
+                <textarea id="description" name="description" rows="3" placeholder="Présentez votre groupe..."></textarea>
+            </div>
 
-        <button type="submit" class="btn" style="width: 100%;">Créer le groupe et envoyer les invitations</button>
-    </form>
+            <div class="form-group">
+                <label for="image">Lien de l'image de couverture (URL) :</label>
+                <input type="text" id="image" name="image" placeholder="https://lien-vers-image.jpg" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label>Inviter des membres par adresse Email :</label>
+                <div class="invite-box">
+                    <input type="email" id="emailInput" placeholder="adresse@mail.com" autocomplete="off">
+                    <button type="button" class="btn-auth" onclick="ajouterMembreALaListe()" style="background: #10b981; color: white; border: none; white-space: nowrap;">
+                        <i class="fa-solid fa-plus"></i> Ajouter
+                    </button>
+                </div>
+                <p id="errorEmail" class="error-msg">Email invalide ou déjà ajouté.</p>
+
+                <div id="listeMembresVisuelle" style="margin-top: 15px; border: 1px dashed var(--slate); padding: 12px; border-radius: 6px; min-height: 55px; background: #faf9f6;">
+                    <!-- Les tags d'invitations s'insèrent ici dynamiquement -->
+                </div>
+
+                <input type="hidden" id="listeEmailsSynthese" name="emailsInvites" value="">
+            </div>
+
+            <div class="actions-bar">
+                <button type="submit" class="btn-auth primary" style="width: 100%;">
+                    <i class="fa-solid fa-paper-plane"></i> Créer le groupe et envoyer les invitations
+                </button>
+            </div>
+        </form>
+    </div>
+
 </div>
 
-<script>
-    const emailsSet = new Set();
+<!-- Script logique d'invitation conservé à l'identique -->
+<th:block layout:fragment="js">
+    <script>
+        const emailsSet = new Set();
 
-    function ajouterMembreALaListe() {
-        const input = document.getElementById('emailInput');
-        const email = input.value.trim();
-        const errorMsg = document.getElementById('errorEmail');
+        function ajouterMembreALaListe() {
+            const input = document.getElementById('emailInput');
+            const email = input.value.trim();
+            const errorMsg = document.getElementById('errorEmail');
 
-        if (email === "" || !input.checkValidity()) {
-            errorMsg.textContent = "Veuillez entrer une adresse e-mail valide.";
-            errorMsg.style.display = "block";
-            return;
+            if (email === "" || !input.checkValidity()) {
+                errorMsg.textContent = "Veuillez entrer une adresse e-mail valide.";
+                errorMsg.style.display = "block";
+                return;
+            }
+
+            if (emailsSet.has(email)) {
+                errorMsg.textContent = "Cet utilisateur est déjà dans la liste d'invitation.";
+                errorMsg.style.display = "block";
+                return;
+            }
+
+            errorMsg.style.display = "none";
+            emailsSet.add(email);
+
+            const container = document.getElementById('listeMembresVisuelle');
+            const tag = document.createElement('span');
+            tag.className = 'member-tag';
+            tag.id = `tag-${email}`;
+            tag.innerHTML = `${email} <button type="button" onclick="retirerMembreDeLaListe('${email}')">×</button>`;
+            container.appendChild(tag);
+
+            mettreAJourChampCache();
+            input.value = "";
         }
 
-        if (emailsSet.has(email)) {
-            errorMsg.textContent = "Cet utilisateur est déjà dans la liste d'invitation.";
-            errorMsg.style.display = "block";
-            return;
+        function retirerMembreDeLaListe(email) {
+            emailsSet.delete(email);
+            const tag = document.getElementById(`tag-${email}`);
+            if (tag) tag.remove();
+            mettreAJourChampCache();
         }
 
-        errorMsg.style.display = "none";
-        emailsSet.add(email);
-
-        // Ajouter visuellement le tag
-        const container = document.getElementById('listeMembresVisuelle');
-        const tag = document.createElement('span');
-        tag.className = 'member-tag';
-        tag.id = `tag-${email}`;
-        tag.innerHTML = `${email} <button type="button" onclick="retirerMembreDeLaListe('${email}')">x</button>`;
-        container.appendChild(tag);
-
-        // Mettre à jour le champ caché
-        mettreAJourChampCache();
-
-        // Réinitialiser l'input
-        input.value = "";
-    }
-
-    function retirerMembreDeLaListe(email) {
-        emailsSet.delete(email);
-        const tag = document.getElementById(`tag-${email}`);
-        if (tag) tag.remove();
-        mettreAJourChampCache();
-    }
-
-    function mettreAJourChampCache() {
-        document.getElementById('listeEmailsSynthese').value = Array.from(emailsSet).join(',');
-    }
-</script>
-
+        function mettreAJourChampCache() {
+            document.getElementById('listeEmailsSynthese').value = Array.from(emailsSet).join(',');
+        }
+    </script>
+</th:block>
 </body>
 </html>

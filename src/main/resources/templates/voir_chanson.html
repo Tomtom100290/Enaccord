@@ -1,279 +1,277 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}" lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${chanson.titre} + ' - Le Juste Accord'">Chanson</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8fafc;
-            padding: 40px;
-            color: #1e293b;
-        }
-        .song-container {
-            max-width: 700px;
-            margin: 0 auto;
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-        .song-header {
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
-        }
-        .song-title {
-            color: #7c3aed;
-            font-size: 2rem;
-            margin: 0 0 10px 0;
-        }
-        .song-artist {
-            font-size: 1.1rem;
-            color: #64748b;
-            font-style: italic;
-        }
+    <title th:text="${chanson.titre}"></title>
 
-        /* Barre d'outils de transposition */
-        .transpose-toolbar {
-            background-color: #f1f5f9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .transpose-toolbar span {
-            font-weight: bold;
-            color: #475569;
-        }
-        .btn-transpose {
-            background-color: white;
-            border: 1px solid #cbd5e1;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #1e293b;
-            transition: all 0.2s;
-        }
-        .btn-transpose:hover {
-            background-color: #7c3aed;
-            color: white;
-            border-color: #7c3aed;
-        }
-        .current-pitch {
-            font-family: monospace;
-            background: #e2e8f0;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
+    <!-- Styles spécifiques à l'affichage et la transposition de la chanson -->
+    <th:block layout:fragment="css">
+        <style>
+            .song-card {
+                background: white;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            }
+            .song-header {
+                border-bottom: 2px solid var(--cream);
+                padding-bottom: 20px;
+                margin-bottom: 24px;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+            .song-header h1 {
+                color: var(--ink);
+                font-family: 'Fraunces', serif;
+                font-size: 2.2rem;
+                margin: 0 0 6px 0;
+            }
+            .song-artist {
+                font-size: 1.1rem;
+                color: var(--slate);
+                font-style: italic;
+            }
 
-        /* Rendu des lignes et des accords */
-        .chordpro-line {
-            display: flex;
-            flex-wrap: wrap;
-            margin-bottom: 18px;
-            font-family: 'Courier New', monospace;
-            font-size: 1.15rem;
-            line-height: 2.2rem;
-        }
-        .chord-wrapper {
-            position: relative;
-            display: inline-block;
-            margin-right: 4px;
-        }
-        .chord-badge {
-            position: absolute;
-            bottom: 1.1rem;
-            left: 0;
-            color: var(--chord-color, #7c3aed); /* Utilise la couleur dynamique de la BDD */
-            font-weight: bold;
-            font-size: 0.95rem;
-            user-select: none;
-        }
+            /* Barre d'outils de transposition */
+            .transpose-toolbar {
+                background-color: var(--cream);
+                padding: 16px;
+                border-radius: 8px;
+                margin-bottom: 32px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                border: 1px solid rgba(43, 36, 26, 0.05);
+            }
+            .transpose-toolbar span {
+                font-weight: 600;
+                color: var(--ink-soft);
+                font-size: 0.95rem;
+            }
+            .btn-transpose {
+                background-color: white;
+                border: 1px solid var(--slate);
+                padding: 8px 14px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 600;
+                color: var(--ink);
+                transition: all 0.15s ease;
+            }
+            .btn-transpose:hover {
+                background-color: var(--mustard);
+                border-color: transparent;
+                color: var(--ink);
+            }
+            .current-pitch {
+                font-family: monospace;
+                background: white;
+                border: 1px solid rgba(43, 36, 26, 0.1);
+                padding: 6px 12px;
+                border-radius: 4px;
+                font-weight: bold;
+                color: var(--ink-soft);
+            }
 
-        .btn-back {
-            display: inline-block;
-            margin-top: 30px;
-            color: #7c3aed;
-            text-decoration: none;
-            font-weight: bold;
-        }
-    </style>
+            /* Rendu des lignes et des accords */
+            .chordpro-line {
+                display: flex;
+                flex-wrap: wrap;
+                margin-bottom: 20px;
+                font-family: 'Courier New', monospace;
+                font-size: 1.2rem;
+                line-height: 2.4rem;
+                color: var(--ink-soft);
+            }
+            .chord-wrapper {
+                position: relative;
+                display: inline-block;
+                margin-right: 4px;
+            }
+            .chord-badge {
+                position: absolute;
+                bottom: 1.2rem;
+                left: 0;
+                color: var(--chord-color, var(--mustard-deep));
+                font-weight: bold;
+                font-size: 1rem;
+                user-select: none;
+            }
+        </style>
+    </th:block>
 </head>
 <body>
 
-<div class="song-container">
-    <div class="song-header">
-        <h1 class="song-title" th:text="${chanson.titre}">Titre de la chanson</h1>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div class="song-artist" th:text="'Par ' + ${chanson.artiste}">Artiste</div>
-            <a th:href="@{/chansons/{id}/modifier(id=${chanson.id})}"
-               style="background-color: #7c3aed; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.9rem;">
-                ✏️ Modifier les accords
+<div layout:fragment="content">
+
+    <div class="song-card">
+        <div class="song-header">
+            <div>
+                <h1 th:text="${chanson.titre}">Titre de la chanson</h1>
+                <div class="song-artist" th:text="'Par ' + ${chanson.artiste}">Artiste</div>
+            </div>
+            <a th:href="@{/chansons/{id}/modifier(id=${chanson.id})}" class="btn-auth primary" style="text-decoration: none;">
+                <i class="fa-solid fa-sliders"></i> Modifier les accords
+            </a>
+        </div>
+
+        <!-- Module de transposition -->
+        <div class="transpose-toolbar">
+            <span><i class="fa-solid fa-tuning-fork"></i> Transposer :</span>
+            <button class="btn-transpose" onclick="transposer(-2)">-1 Ton</button>
+            <button class="btn-transpose" onclick="transposer(-1)">-1/2 Ton</button>
+            <span class="current-pitch" id="pitchIndicator">Original</span>
+            <button class="btn-transpose" onclick="transposer(1)">+1/2 Ton</button>
+            <button class="btn-transpose" onclick="transposer(2)">+1 Ton</button>
+            <button class="btn-transpose" onclick="reinitialiserTranspo()" style="margin-left: auto; background: var(--slate); border: none; color: white;">Réinitialiser</button>
+        </div>
+
+        <!-- Conteneurs de données -->
+        <div id="rawChordPro" style="display: none;" th:text="${chanson.contenuChordPro}"></div>
+        <div id="formattedSong"></div>
+
+        <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.06);">
+            <a th:href="@{/}" class="btn-auth ghost" style="text-decoration: none; color: var(--ink); border-color: var(--slate);">
+                <i class="fa-solid fa-arrow-left"></i> Retour au répertoire
             </a>
         </div>
     </div>
 
-    <div class="transpose-toolbar">
-        <span>Transposer :</span>
-        <button class="btn-transpose" onclick="transposer(-2)">-1 Ton</button>
-        <button class="btn-transpose" onclick="transposer(-1)">-1/2 Ton</button>
-        <span class="current-pitch" id="pitchIndicator">Original</span>
-        <button class="btn-transpose" onclick="transposer(1)">+1/2 Ton</button>
-        <button class="btn-transpose" onclick="transposer(2)">+1 Ton</button>
-        <button class="btn-transpose" onclick="reinitialiserTranspo()" style="margin-left: auto; background: #e2e8f0; border: none;">Réinitialiser</button>
-    </div>
-
-    <div id="rawChordPro" style="display: none;" th:text="${chanson.contenuChordPro}"></div>
-
-    <div id="formattedSong"></div>
-
-    <a href="/" class="btn-back">← Retour au répertoire</a>
 </div>
 
-<script th:inline="javascript">
-    // 1. On récupère dynamiquement la table des notes depuis la BDD via Thymeleaf !
-    // Si la table n'est pas dispo, on utilise une liste par défaut pour la sécurité.
-    const tableNotes = /*[[${accordsDisponibles}]]*/ [
-        {valeur: 1,  libelleEn: "C",  couleur: "#EF4444"},
-        {valeur: 2,  libelleEn: "C#", couleur: "#F43F5E"},
-        {valeur: 3,  libelleEn: "D",  couleur: "#F97316"},
-        {valeur: 4,  libelleEn: "D#", couleur: "#FBBF24"},
-        {valeur: 5,  libelleEn: "E",  couleur: "#F59E0B"},
-        {valeur: 6,  libelleEn: "F",  couleur: "#10B981"},
-        {valeur: 7,  libelleEn: "F#", couleur: "#06B6D4"},
-        {valeur: 8,  libelleEn: "G",  couleur: "#3B82F6"},
-        {valeur: 9,  libelleEn: "G#", couleur: "#6366F1"},
-        {valeur: 10, libelleEn: "A",  couleur: "#8B5CF6"},
-        {valeur: 11, libelleEn: "A#", couleur: "#D946EF"},
-        {valeur: 12, libelleEn: "B",  couleur: "#EC4899"}
-    ];
+<!-- Script logique conservé et optimisé -->
+<th:block layout:fragment="js">
+    <script th:inline="javascript">
+        const tableNotes = /*[[${accordsDisponibles}]]*/ [
+            {valeur: 1,  libelleEn: "C",  couleur: "#EF4444"},
+            {valeur: 2,  libelleEn: "C#", couleur: "#F43F5E"},
+            {valeur: 3,  libelleEn: "D",  couleur: "#F97316"},
+            {valeur: 4,  libelleEn: "D#", couleur: "#FBBF24"},
+            {valeur: 5,  libelleEn: "E",  couleur: "#F59E0B"},
+            {valeur: 6,  libelleEn: "F",  couleur: "#10B981"},
+            {valeur: 7,  libelleEn: "F#", couleur: "#06B6D4"},
+            {valeur: 8,  libelleEn: "G",  couleur: "#3B82F6"},
+            {valeur: 9,  libelleEn: "G#", couleur: "#6366F1"},
+            {valeur: 10, libelleEn: "A",  couleur: "#8B5CF6"},
+            {valeur: 11, libelleEn: "A#", couleur: "#D946EF"},
+            {valeur: 12, libelleEn: "B",  couleur: "#EC4899"}
+        ];
 
-    let decalageCumule = 0; // Suit le décalage global (ex: +3 demi-tons)
+        let decalageCumule = 0;
 
-    document.addEventListener("DOMContentLoaded", function() {
-        dessinerChanson();
-    });
+        document.addEventListener("DOMContentLoaded", function() {
+            dessinerChanson();
+        });
 
-    // 2. Fonction principale de rendu de la chanson
-    function dessinerChanson() {
-        const rawText = document.getElementById('rawChordPro').textContent;
-        const targetDiv = document.getElementById('formattedSong');
+        function dessinerChanson() {
+            const rawText = document.getElementById('rawChordPro').textContent;
+            const targetDiv = document.getElementById('formattedSong');
 
-        if (!rawText.trim()) {
-            targetDiv.innerHTML = "<p>Aucune parole enregistrée pour cette chanson.</p>";
-            return;
-        }
-
-        const lines = rawText.split('\n');
-        let htmlResult = "";
-
-        lines.forEach(line => {
-            if (line.trim() === "") {
-                htmlResult += "<div style='height: 15px;'></div>";
+            if (!rawText.trim()) {
+                targetDiv.innerHTML = "<p>Aucune parole enregistrée pour cette chanson.</p>";
                 return;
             }
 
-            const parts = line.split(/(\[.*?\])/g);
-            let lineHtml = "<div class='chordpro-line'>";
-            let currentChord = null;
+            const lines = rawText.split('\n');
+            let htmlResult = "";
 
-            parts.forEach(part => {
-                if (part.startsWith('[') && part.endsWith(']')) {
-                    const accordBrut = part.slice(1, -1);
-                    // On applique la transposition à l'accord brut
-                    currentChord = calculerNouvelAccord(accordBrut, decalageCumule);
-                } else {
-                    if (currentChord) {
-                        // On injecte l'accord et sa couleur spécifique
-                        lineHtml += `<span class='chord-wrapper'><span class='chord-badge' style='--chord-color: ${currentChord.couleur}'>${currentChord.nom}</span>${part || '&nbsp;'}</span>`;
-                        currentChord = null;
-                    } else if (part.trim() !== "" || part === " ") {
-                        lineHtml += `<span>${part}</span>`;
-                    }
+            lines.forEach(line => {
+                if (line.trim() === "") {
+                    htmlResult += "<div style='height: 15px;'></div>";
+                    return;
                 }
+
+                const parts = line.split(/(\[.*?\])/g);
+                let lineHtml = "<div class='chordpro-line'>";
+                let currentChord = null;
+
+                parts.forEach(part => {
+                    if (part.startsWith('[') && part.endsWith(']')) {
+                        const accordBrut = part.slice(1, -1);
+                        currentChord = calculerNouvelAccord(accordBrut, decalageCumule);
+                    } else {
+                        if (currentChord) {
+                            lineHtml += `<span class='chord-wrapper'><span class='chord-badge' style='--chord-color: ${currentChord.couleur}'>${currentChord.nom}</span>${part || '&nbsp;'}</span>`;
+                            currentChord = null;
+                        } else if (part.trim() !== "" || part === " ") {
+                            lineHtml += `<span>${part}</span>`;
+                        }
+                    }
+                });
+
+                if (currentChord) {
+                    lineHtml += `<span class='chord-wrapper'><span class='chord-badge' style='--chord-color: ${currentChord.couleur}'>${currentChord.nom}</span>&nbsp;</span>`;
+                }
+
+                lineHtml += "</div>";
+                htmlResult += lineHtml;
             });
 
-            if (currentChord) {
-                lineHtml += `<span class='chord-wrapper'><span class='chord-badge' style='--chord-color: ${currentChord.couleur}'>${currentChord.nom}</span>&nbsp;</span>`;
+            targetDiv.innerHTML = htmlResult;
+            mettreAJourIndicateur();
+        }
+
+        function calculerNouvelAccord(accordOriginal, shift) {
+            if (shift === 0) {
+                const noteInfo = trouverNoteParNom(accordOriginal);
+                return { nom: accordOriginal, couleur: noteInfo ? noteInfo.couleur : '#E3B23C' };
             }
 
-            lineHtml += "</div>";
-            htmlResult += lineHtml;
-        });
+            const regex = /^([A-G]#?)(.*)$/;
+            const matches = accordOriginal.match(regex);
 
-        targetDiv.innerHTML = htmlResult;
-        mettreAJourIndicateur();
-    }
+            if (!matches) {
+                return { nom: accordOriginal, couleur: '#E3B23C' };
+            }
 
-    // 3. Algorithme de calcul de la transposition
-    function calculerNouvelAccord(accordOriginal, shift) {
-        if (shift === 0) {
-            // Si pas de transpo, on cherche juste la couleur d'origine
-            const noteInfo = trouverNoteParNom(accordOriginal);
-            return { nom: accordOriginal, couleur: noteInfo ? noteInfo.couleur : '#7c3aed' };
+            const noteFondamentale = matches[1];
+            const suffixe = matches[2];
+
+            const noteInfo = trouverNoteParNom(noteFondamentale);
+            if (!noteInfo) {
+                return { nom: accordOriginal, couleur: '#E3B23C' };
+            }
+
+            let nouvelleValeur = ((noteInfo.valeur - 1 + shift) % 12 + 12) % 12 + 1;
+            const nouvelleNoteInfo = tableNotes.find(n => n.valeur === nouvelleValeur);
+
+            return {
+                nom: nouvelleNoteInfo.libelleEn + suffixe,
+                couleur: nouvelleNoteInfo.couleur
+            };
         }
 
-        // Regex pour séparer la note fondamentale (ex: "C#", "F") du reste de l'accord (ex: "m", "7", "sus4")
-        const regex = /^([A-G]#?)(.*)$/;
-        const matches = accordOriginal.match(regex);
-
-        if (!matches) {
-            return { nom: accordOriginal, couleur: '#7c3aed' }; // Sécurité si l'accord est bizarre
+        function trouverNoteParNom(nom) {
+            return tableNotes.find(n => n.libelleEn === nom);
         }
 
-        const noteFondamentale = matches[1]; // Ex: "C#"
-        const suffixe = matches[2];          // Ex: "m7"
-
-        const noteInfo = trouverNoteParNom(noteFondamentale);
-        if (!noteInfo) {
-            return { nom: accordOriginal, couleur: '#7c3aed' }; // Si la note n'est pas dans nos 12 notes
+        function transposer(demiTons) {
+            decalageCumule += demiTons;
+            dessinerChanson();
         }
 
-        // Formule magique modulo 12 !
-        // En JS, on ajoute +12 avant le modulo pour éviter les résultats négatifs si on transpose vers le bas
-        let nouvelleValeur = ((noteInfo.valeur - 1 + shift) % 12 + 12) % 12 + 1;
-
-        const nouvelleNoteInfo = tableNotes.find(n => n.valeur === nouvelleValeur);
-
-        return {
-            nom: nouvelleNoteInfo.libelleEn + suffixe,
-            couleur: nouvelleNoteInfo.couleur
-        };
-    }
-
-    // Cherche une note (gère la correspondance exacte)
-    function trouverNoteParNom(nom) {
-        return tableNotes.find(n => n.libelleEn === nom);
-    }
-
-    // 4. Fonctions déclenchées par les boutons
-    function transposer(demiTons) {
-        decalageCumule += demiTons;
-        dessinerChanson();
-    }
-
-    function reinitialiserTranspo() {
-        decalageCumule = 0;
-        dessinerChanson();
-    }
-
-    function mettreAJourIndicateur() {
-        const ind = document.getElementById('pitchIndicator');
-        if (decalageCumule === 0) {
-            ind.textContent = "Original";
-        } else {
-            const signe = decalageCumule > 0 ? "+" : "";
-            // 2 demi-tons = 1 ton
-            const tons = decalageCumule / 2;
-            ind.textContent = `${signe}${tons} Ton${Math.abs(tons) > 1 ? 's' : ''}`;
+        function reinitialiserTranspo() {
+            decalageCumule = 0;
+            dessinerChanson();
         }
-    }
-</script>
 
+        function mettreAJourIndicateur() {
+            const ind = document.getElementById('pitchIndicator');
+            if (decalageCumule === 0) {
+                ind.textContent = "Original";
+            } else {
+                const signe = decalageCumule > 0 ? "+" : "";
+                const tons = decalageCumule / 2;
+                ind.textContent = `${signe}${tons} Ton${Math.abs(tons) > 1 ? 's' : ''}`;
+            }
+        }
+    </script>
+</th:block>
 </body>
 </html>
