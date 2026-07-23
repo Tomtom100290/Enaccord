@@ -4,6 +4,7 @@ import com.enaccord.app.config.SecurityConfig;
 import com.enaccord.app.model.Chanson;
 import com.enaccord.app.model.Groupe;
 import com.enaccord.app.model.Utilisateur;
+import com.enaccord.app.repository.AccordRepository;
 import com.enaccord.app.repository.ChansonRepository;
 import com.enaccord.app.repository.GroupeRepository;
 import com.enaccord.app.repository.UtilisateurRepository;
@@ -37,6 +38,7 @@ class ChansonControllerTest {
     @MockitoBean private ChansonRepository chansonRepository;
     @MockitoBean private GroupeRepository groupeRepository;
     @MockitoBean private UtilisateurRepository utilisateurRepository;
+    @MockitoBean private AccordRepository accordRepository;
 
     private org.springframework.security.core.userdetails.UserDetails getMockUser() {
         return org.springframework.security.core.userdetails.User
